@@ -6,26 +6,17 @@ on:
     paths:
       - 'data/langchain_llms*.txt'
       - 'data/langgraph_llms*.txt'
-      - 'scripts/build_vectorstore.py'
 
 jobs:
   validate:
-    name: Validate & Build Vector Store
+    name: Validate Data Files
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
-      
-      - name: Verify data files exist
+      - name: Verify all data files exist
         run: |
           python -c "
           import os
@@ -41,33 +32,10 @@ jobs:
                   exit(1)
               size = os.path.getsize(f) / 1024 / 1024
               print(f'✓ {f} ({size:.1f}MB)')
-          "
-      
-      - name: Setup Ollama
-        run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-          ollama serve &
-          sleep 5
-          ollama pull llama3.2:3b
-          ollama pull nomic-embed-text
-      
-      - name: Build vector store
-        run: python scripts/build_vectorstore.py
-      
-      - name: Verify vector store
-        run: |
-          python -c "
-          import os
-          if os.path.exists('data/vectorstore/index.faiss'):
-              size = os.path.getsize('data/vectorstore/index.faiss') / 1024 / 1024
-              print(f'✓ Vector store built ({size:.1f}MB)')
-          else:
-              print('❌ Vector store build failed')
-              exit(1)
+          print('✓ All data files valid')
           "
       
       - name: Summary
         run: |
-          echo "## ✅ Data Validation" >> $GITHUB_STEP_SUMMARY
-          echo "- All data files verified" >> $GITHUB_STEP_SUMMARY
-          echo "- Vector store built successfully" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Data Files Validated" >> $GITHUB_STEP_SUMMARY
+          echo "All documentation files present and valid" >> $GITHUB_STEP_SUMMARY

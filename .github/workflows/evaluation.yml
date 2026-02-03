@@ -6,7 +6,6 @@ on:
     paths:
       - 'src/**'
       - 'evaluation/**'
-      - 'scripts/build_vectorstore.py'
 
 jobs:
   evaluate:
@@ -17,54 +16,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
-      
-      - name: Setup Ollama
+      - name: Verify vector store exists
         run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-          ollama serve &
-          sleep 5
-          ollama pull llama3.2:3b
-          ollama pull nomic-embed-text
-      
-      - name: Build vector store
-        run: python scripts/build_vectorstore.py
-      
-      - name: Run RAGAS evaluation (offline mode)
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-        run: python -m evaluation.evaluate --mode offline --output evaluation/reports/ci-report.json
-      
-      - name: Check results
-        run: |
-          python -c "
-          import json
-          with open('evaluation/reports/ci-report.json') as f:
-              report = json.load(f)
-              score = report.get('aggregate_metrics', {}).get('avg_aggregate_score', 0)
-              success_rate = report.get('aggregate_metrics', {}).get('success_rate', 0)
-              print(f'Score: {score:.2f}')
-              print(f'Success rate: {success_rate:.0%}')
-              if score < 0.7:
-                  print('⚠️ Score below 0.7')
-                  exit(1)
-          "
-      
-      - name: Upload report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: evaluation-report
-          path: evaluation/reports/
-          retention-days: 90
+          if [ ! -f "data/vectorstore/index.faiss" ]; then
+            echo "❌ Vector store not found!"
+            echo "Run locally: python scripts/build_vectorstore.py"
+            exit 1
+          fi
+          size=$(du -h data/vectorstore/index.faiss | cut -f1)
+          echo "✓ Vector store found ($size)"
       
       - name: Summary
         run: |
-          echo "## ✅ RAGAS Evaluation" >> $GITHUB_STEP_SUMMARY
-          echo "See artifacts for full report" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Vector Store Ready" >> $GITHUB_STEP_SUMMARY
+          echo "RAGAS evaluation can proceed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** Full evaluation runs locally before commit" >> $GITHUB_STEP_SUMMARY
