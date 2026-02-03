@@ -1,0 +1,77 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# === Virtual Environments ===
+.env
+.venv
+env/
+venv/
+ENV/
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# === Testing ===
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# === Type Checking ===
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# === Jupyter ===
+.ipynb_checkpoints/
+
+# === Project Specific ===
+
+# Vector store (can be rebuilt)
+data/vectorstore/
+
+# Downloaded documentation (can be re-downloaded)
+# Uncomment if you don't want to track these
+# data/*.txt
+
+# Evaluation reports (generated)
+evaluation/reports/*.json
+evaluation/reports/*.md
+
+# Keep the reports directory
+!evaluation/reports/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

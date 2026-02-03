@@ -1,0 +1,90 @@
+# Docker Compose for LangGraph Helper Agent
+# 
+# Usage:
+#   docker compose up agent-offline     # Run in offline mode
+#   docker compose up agent-online      # Run in online mode  
+#   docker compose run --rm setup       # Initial setup (download docs, build vectorstore)
+
+services:
+  # === Setup service (run once) ===
+  setup:
+    build:
+      context: .
+      target: runtime
+    volumes:
+      - ./data:/app/data
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    entrypoint: /bin/bash
+    command: |
+      -c "
+      echo '📥 Downloading documentation...'
+      python scripts/refresh_data.py --full
+      echo ''
+      echo '🔧 Building vector store...'
+      python scripts/build_vectorstore.py
+      echo ''
+      echo '✅ Setup complete!'
+      "
+    profiles:
+      - setup
+
+  # === Offline mode agent ===
+  agent-offline:
+    build:
+      context: .
+      target: runtime
+    volumes:
+      - ./data:/app/data:ro
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - AGENT_MODE=offline
+    stdin_open: true
+    tty: true
+    command: ["--interactive"]
+
+  # === Online mode agent ===
+  agent-online:
+    build:
+      context: .
+      target: runtime
+    volumes:
+      - ./data:/app/data:ro
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - AGENT_MODE=online
+    stdin_open: true
+    tty: true
+    command: ["--interactive"]
+
+  # === Evaluation runner ===
+  evaluate:
+    build:
+      context: .
+      target: runtime
+    volumes:
+      - ./data:/app/data:ro
+      - ./evaluation:/app/evaluation
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+    entrypoint: ["python", "-m", "evaluation.evaluate"]
+    profiles:
+      - eval
+
+  # === Development shell ===
+  dev:
+    build:
+      context: .
+      target: runtime
+    volumes:
+      - .:/app
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+    entrypoint: /bin/bash
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev

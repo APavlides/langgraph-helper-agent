@@ -1,0 +1,35 @@
+# LangGraph Helper Agent Configuration
+
+llm:
+  model:
+    name: "llama3.2:3b" # Must be pulled with 'ollama pull'
+
+  parameters:
+    temperature: 0.1 # Lower = more deterministic (good for factual answers)
+    max_tokens: 2000 # Maximum response length
+    top_p: 0.9 # Nucleus sampling
+
+  # Ollama server settings
+  ollama:
+    base_url: "http://localhost:11434"
+    timeout: 120
+
+# Embedding model configuration
+embedding:
+  # Currently only Ollama embeddings are supported
+  platform: ollama
+  model: "nomic-embed-text"
+  base_url: "http://localhost:11434"
+
+# Agent configuration
+agent:
+  mode: offline # 'offline' or 'online'
+  retrieval_k: 5 # Number of documents to retrieve
+  chunk_size: 1000
+  chunk_overlap: 200
+  confidence_threshold: 0.7 # For online mode web search trigger
+
+# Data paths
+data:
+  dir: "data"
+  vectorstore: "data/vectorstore"

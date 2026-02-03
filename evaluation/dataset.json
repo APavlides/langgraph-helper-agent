@@ -1,0 +1,185 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Evaluation dataset for LangGraph Helper Agent",
+    "created": "2024-01-15",
+    "total_questions": 15
+  },
+  "questions": [
+    {
+      "id": "persist-001",
+      "question": "How do I add persistence to a LangGraph agent?",
+      "category": "persistence",
+      "difficulty": "medium",
+      "expected_topics": ["checkpointer", "MemorySaver", "SqliteSaver", "PostgresSaver"],
+      "expected_code": true,
+      "ground_truth_snippets": [
+        "from langgraph.checkpoint.memory import MemorySaver",
+        "checkpointer=",
+        "thread_id"
+      ],
+      "reference_answer": "To add persistence, use a Checkpointer. For development, use MemorySaver. For production, use SqliteSaver or PostgresSaver. Pass it to compile(): graph.compile(checkpointer=checkpointer)"
+    },
+    {
+      "id": "concepts-001",
+      "question": "What's the difference between StateGraph and MessageGraph?",
+      "category": "concepts",
+      "difficulty": "easy",
+      "expected_topics": ["StateGraph", "MessageGraph", "state", "messages", "deprecated"],
+      "expected_code": false,
+      "ground_truth_snippets": [],
+      "reference_answer": "StateGraph is the general-purpose graph that works with any state schema you define. MessageGraph was a specialized graph for chat applications but is now deprecated in favor of using StateGraph with a messages key."
+    },
+    {
+      "id": "hitl-001",
+      "question": "Show me how to implement human-in-the-loop with LangGraph",
+      "category": "human-in-the-loop",
+      "difficulty": "hard",
+      "expected_topics": ["interrupt", "interrupt_before", "interrupt_after", "Command", "resume", "human-in-the-loop"],
+      "expected_code": true,
+      "ground_truth_snippets": [
+        "interrupt_before",
+        "interrupt_after",
+        "interrupt"
+      ],
+      "reference_answer": "Use interrupt_before or interrupt_after in node configuration, or use the interrupt() function within nodes. Resume execution with Command(resume=value)."
+    },
+    {
+      "id": "errors-001",
+      "question": "How do I handle errors and retries in LangGraph nodes?",
+      "category": "error-handling",
+      "difficulty": "medium",
+      "expected_topics": ["retry", "error", "exception", "fallback", "retry_policy"],
+      "expected_code": true,
+      "ground_truth_snippets": [
+        "retry",
+        "except"
+      ],
+      "reference_answer": "Use retry_policy in node configuration or wrap node logic in try/except. You can also use LangChain's with_retry() method on runnables."
+    },
+    {
+      "id": "state-001",
+      "question": "What are best practices for state management in LangGraph?",
+      "category": "state-management",
+      "difficulty": "medium",
+      "expected_topics": ["TypedDict", "Annotated", "reducer", "add_messages", "state schema"],
+      "expected_code": true,
+      "ground_truth_snippets": [
+        "TypedDict",
+        "Annotated"
+      ],
+      "reference_answer": "Use TypedDict or dataclass for state schema. Use Annotated with reducer functions for fields that accumulate values. Keep state minimal and serializable."
+    },
+    {
+      "id": "tools-001",
+      "question": "How do I add tools to a LangGraph agent?",
+      "category": "tools",
+      "difficulty": "medium",
+      "expected_topics": ["ToolNode", "tools", "bind_tools", "tool calling", "@tool"],
+      "expected_code": true,
+      "ground_truth_snippets": [
+        "ToolNode",
+        "bind_tools"
+      ],
+      "reference_answer": "Define tools using @tool decorator, bind them to the LLM with bind_tools(), and use ToolNode to execute tool calls. Route to ToolNode when the LLM returns tool calls."
+    },
+    {
+      "id": "stream-001",
+      "question": "How can I stream responses from a LangGraph agent?",
+      "category": "streaming",
+      "difficulty": "medium",
+      "expected_topics": ["stream", "astream", "stream_mode", "values", "updates", "messages"],
+      "expected_code": true,
+      "ground_truth_snippets": [
+        ".stream(",
+        "stream_mode"
+      ],
+      "reference_answer": "Use graph.stream() or graph.astream() with stream_mode parameter. Options include 'values' for full state, 'updates' for deltas, and 'messages' for LLM tokens."
+    },
+    {
+      "id": "subgraph-001",
+      "question": "How do I create and use subgraphs in LangGraph?",
+      "category": "architecture",
+      "difficulty": "hard",
+      "expected_topics": ["subgraph", "nested", "compiled graph", "add_node"],
+      "expected_code": true,
+      "ground_truth_snippets": [],
+      "reference_answer": "Add a compiled graph as a node in another graph. The subgraph's state is managed independently. Use state mapping if the schemas differ between parent and child."
+    },
+    {
+      "id": "memory-001",
+      "question": "What's the difference between short-term and long-term memory in LangGraph?",
+      "category": "memory",
+      "difficulty": "medium",
+      "expected_topics": ["checkpointer", "store", "memory", "thread", "namespace", "short-term", "long-term"],
+      "expected_code": false,
+      "ground_truth_snippets": [],
+      "reference_answer": "Short-term memory uses checkpointers to persist state within a thread/conversation. Long-term memory uses a Store to persist information across threads and conversations."
+    },
+    {
+      "id": "conditional-001",
+      "question": "How do I add conditional edges in LangGraph?",
+      "category": "routing",
+      "difficulty": "easy",
+      "expected_topics": ["add_conditional_edges", "routing", "conditional", "END"],
+      "expected_code": true,
+      "ground_truth_snippets": [
+        "add_conditional_edges",
+        "END"
+      ],
+      "reference_answer": "Use add_conditional_edges() with a routing function that returns the next node name based on the current state. The function receives state and returns a string node name."
+    },
+    {
+      "id": "parallel-001",
+      "question": "Can LangGraph run nodes in parallel? How?",
+      "category": "architecture",
+      "difficulty": "hard",
+      "expected_topics": ["parallel", "fan-out", "fan-in", "Send", "branches"],
+      "expected_code": true,
+      "ground_truth_snippets": [],
+      "reference_answer": "Yes, add edges from one node to multiple nodes for fan-out. They execute in parallel. Use a reducer function in state to combine results (fan-in). For dynamic parallelism, use Send()."
+    },
+    {
+      "id": "deploy-001",
+      "question": "How do I deploy a LangGraph agent to production?",
+      "category": "deployment",
+      "difficulty": "medium",
+      "expected_topics": ["LangGraph Platform", "LangGraph Cloud", "deploy", "API", "LangGraph Server"],
+      "expected_code": false,
+      "ground_truth_snippets": [],
+      "reference_answer": "Use LangGraph Platform for managed deployment, or self-host with LangGraph Server. You can also wrap the graph in FastAPI or other frameworks for custom deployments."
+    },
+    {
+      "id": "debug-001",
+      "question": "How can I debug a LangGraph agent?",
+      "category": "debugging",
+      "difficulty": "easy",
+      "expected_topics": ["LangSmith", "tracing", "get_state", "visualization", "debug"],
+      "expected_code": false,
+      "ground_truth_snippets": [],
+      "reference_answer": "Use LangSmith for tracing, print statements in nodes, or graph.get_state() to inspect state. You can also visualize the graph with get_graph().draw_mermaid()."
+    },
+    {
+      "id": "react-001",
+      "question": "How do I build a ReAct agent with LangGraph?",
+      "category": "patterns",
+      "difficulty": "medium",
+      "expected_topics": ["create_react_agent", "ReAct", "tools", "reasoning", "prebuilt"],
+      "expected_code": true,
+      "ground_truth_snippets": [
+        "create_react_agent"
+      ],
+      "reference_answer": "Use create_react_agent() from langgraph.prebuilt, passing the LLM and tools. Or build manually with a reasoning node that calls tools in a loop until the task is complete."
+    },
+    {
+      "id": "prebuilt-001",
+      "question": "What prebuilt components does LangGraph provide?",
+      "category": "components",
+      "difficulty": "easy",
+      "expected_topics": ["create_react_agent", "ToolNode", "prebuilt", "InjectedState"],
+      "expected_code": false,
+      "ground_truth_snippets": [],
+      "reference_answer": "LangGraph provides create_react_agent() for ReAct agents, ToolNode for tool execution, and utilities like InjectedState for dependency injection into tools."
+    }
+  ]
+}
