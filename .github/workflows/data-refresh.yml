@@ -1,4 +1,4 @@
-name: Refresh Documentation Data
+name: Validate Data
 
 on:
   push:
@@ -6,36 +6,16 @@ on:
     paths:
       - 'data/langchain_llms*.txt'
       - 'data/langgraph_llms*.txt'
-      - '.github/workflows/data-refresh.yml'
-  pull_request:
-    branches: [main, master]
-    paths:
-      - 'data/langchain_llms*.txt'
-      - 'data/langgraph_llms*.txt'
-  schedule:
-    # Run every Sunday at 2 AM UTC (fallback)
-    - cron: "0 2 * * 0"
-  workflow_dispatch:
-    inputs:
-      include_full:
-        description: "Include full documentation versions"
-        required: false
-        default: "true"
-        type: boolean
+      - 'scripts/build_vectorstore.py'
 
 jobs:
-  check-data:
-    name: Check & Validate Data
+  validate:
+    name: Validate & Build Vector Store
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: write
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -43,73 +23,51 @@ jobs:
           python-version: "3.11"
       
       - name: Install dependencies
-        run: pip install httpx python-dotenv
+        run: pip install -e ".[dev]"
       
-      - name: Download fresh llms.txt files
+      - name: Verify data files exist
         run: |
-          if [ "${{ inputs.include_full }}" == "true" ] || [ -z "${{ inputs.include_full }}" ]; then
-            python scripts/refresh_data.py --full
-          else
-            python scripts/refresh_data.py
-          fi
-      
-      - name: Check for changes
-        id: changes
-        run: |
-          if git diff --quiet data/; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "📋 No changes detected in documentation"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "📝 Documentation has been updated"
-            git diff --stat data/
-          fi
-      
-      - name: Commit and push if changed
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/
-          git commit -m "chore: refresh llms.txt documentation [automated]
-
-          Updated documentation from upstream sources.
-          Triggered by: ${{ github.event_name }}
-          Run ID: ${{ github.run_id }}"
-          git push
+          python -c "
+          import os
+          files = [
+              'data/langchain_llms.txt',
+              'data/langchain_llms_full.txt',
+              'data/langgraph_llms.txt',
+              'data/langgraph_llms_full.txt'
+          ]
+          for f in files:
+              if not os.path.exists(f):
+                  print(f'❌ {f} missing')
+                  exit(1)
+              size = os.path.getsize(f) / 1024 / 1024
+              print(f'✓ {f} ({size:.1f}MB)')
+          "
       
       - name: Setup Ollama
-        if: steps.changes.outputs.changed == 'true'
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
           ollama serve &
           sleep 5
+          ollama pull llama3.2:3b
           ollama pull nomic-embed-text
       
-      - name: Rebuild vector store
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          pip install -e ".[dev]"
-          python scripts/build_vectorstore.py
+      - name: Build vector store
+        run: python scripts/build_vectorstore.py
       
-      - name: Upload updated vector store
-        if: steps.changes.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: vectorstore-${{ github.run_id }}
-          path: data/vectorstore/
-          retention-days: 30
+      - name: Verify vector store
+        run: |
+          python -c "
+          import os
+          if os.path.exists('data/vectorstore/index.faiss'):
+              size = os.path.getsize('data/vectorstore/index.faiss') / 1024 / 1024
+              print(f'✓ Vector store built ({size:.1f}MB)')
+          else:
+              print('❌ Vector store build failed')
+              exit(1)
+          "
       
       - name: Summary
         run: |
-          echo "## Documentation Refresh Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.changes.outputs.changed }}" == "true" ]; then
-            echo "✅ Documentation was updated and committed" >> $GITHUB_STEP_SUMMARY
-            echo "📦 New vector store uploaded as artifact" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "ℹ️ No changes detected - documentation is up to date" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Files in data directory:" >> $GITHUB_STEP_SUMMARY
-          ls -la data/ >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Data Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- All data files verified" >> $GITHUB_STEP_SUMMARY
+          echo "- Vector store built successfully" >> $GITHUB_STEP_SUMMARY
