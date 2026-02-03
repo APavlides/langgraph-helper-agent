@@ -48,8 +48,8 @@ def create_search_tool(settings: Settings):
         return None
     
     if settings.tavily_api_key:
-        from langchain_community.tools import TavilySearchResults
-        return TavilySearchResults(
+        from langchain_tavily import TavilySearch
+        return TavilySearch(
             api_key=settings.tavily_api_key,
             max_results=settings.max_web_results,
         )

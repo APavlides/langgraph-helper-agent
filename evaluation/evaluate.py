@@ -2,12 +2,13 @@
 
 import argparse
 import json
+import os
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-# Ragas imports - these will need to be installed
+# Ragas imports
 try:
     from ragas import evaluate as ragas_evaluate
     from ragas.metrics import (
@@ -16,10 +17,11 @@ try:
         answer_relevancy,
     )
     from datasets import Dataset
+    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
     RAGAS_AVAILABLE = True
 except ImportError:
     RAGAS_AVAILABLE = False
-    print("Warning: Ragas not installed. Install with: pip install ragas datasets")
+    print("Warning: Ragas not installed. Install with: pip install ragas datasets langchain-google-genai")
 
 from langchain_core.messages import HumanMessage
 
@@ -169,7 +171,27 @@ def run_ragas_evaluation(results: list[EvaluationResult]) -> list[EvaluationResu
     
     print(f"Running Ragas evaluation on {len(valid_results)} results...")
     
+    # Check for Google API key
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    if not google_api_key:
+        print("Warning: GOOGLE_API_KEY not found. Skipping Ragas evaluation.")
+        print("Set GOOGLE_API_KEY environment variable to enable Ragas metrics.")
+        return results
+    
     try:
+        # Setup Google Gemini for RAGAS evaluation
+        gemini_llm = ChatGoogleGenerativeAI(
+            model="gemini-1.5-flash",
+            google_api_key=google_api_key,
+            temperature=0.1,
+        )
+        gemini_embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-001",
+            google_api_key=google_api_key,
+        )
+        
+        print("Using Google Gemini (gemini-1.5-flash) for RAGAS evaluation...")
+        
         # Prepare dataset for Ragas
         data = {
             "question": [r.question for r in valid_results],
@@ -178,10 +200,12 @@ def run_ragas_evaluation(results: list[EvaluationResult]) -> list[EvaluationResu
         }
         dataset = Dataset.from_dict(data)
         
-        # Run Ragas evaluation
+        # Run Ragas evaluation with Gemini
         ragas_results = ragas_evaluate(
             dataset,
             metrics=[context_precision, faithfulness, answer_relevancy],
+            llm=gemini_llm,
+            embeddings=gemini_embeddings,
         )
         
         # Map results back

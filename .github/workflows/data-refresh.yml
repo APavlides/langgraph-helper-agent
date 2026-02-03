@@ -67,10 +67,16 @@ jobs:
           Run ID: ${{ github.run_id }}"
           git push
       
+      - name: Setup Ollama
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          sleep 5
+          ollama pull nomic-embed-text
+      
       - name: Rebuild vector store
         if: steps.changes.outputs.changed == 'true'
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: |
           pip install -e ".[dev]"
           python scripts/build_vectorstore.py
