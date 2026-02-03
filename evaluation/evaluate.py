@@ -10,14 +10,11 @@ from typing import Any
 
 # Ragas imports
 try:
-    from ragas import evaluate as ragas_evaluate
-    from ragas.metrics import (
-        context_precision,
-        faithfulness,
-        answer_relevancy,
-    )
     from datasets import Dataset
-    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+    from langchain_google_genai import (ChatGoogleGenerativeAI,
+                                        GoogleGenerativeAIEmbeddings)
+    from ragas import evaluate as ragas_evaluate
+    from ragas.metrics import answer_relevancy, context_precision, faithfulness
     RAGAS_AVAILABLE = True
 except ImportError:
     RAGAS_AVAILABLE = False
@@ -25,17 +22,13 @@ except ImportError:
 
 from langchain_core.messages import HumanMessage
 
+from evaluation.metrics import (AggregateMetrics, EvaluationResult,
+                                calculate_aggregate_metrics,
+                                calculate_code_validity,
+                                calculate_topic_coverage, check_code_presence,
+                                check_snippet_presence)
 from src.agent.graph import create_agent
-from src.config import Settings, AgentMode
-from evaluation.metrics import (
-    EvaluationResult,
-    AggregateMetrics,
-    calculate_topic_coverage,
-    check_code_presence,
-    calculate_code_validity,
-    check_snippet_presence,
-    calculate_aggregate_metrics,
-)
+from src.config import AgentMode, Settings
 
 
 def load_evaluation_dataset(path: str = "evaluation/dataset.json") -> dict:

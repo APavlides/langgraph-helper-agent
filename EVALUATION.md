@@ -49,6 +49,7 @@ python -m evaluation.evaluate --mode offline --output my-report.json
 ### What Gets Evaluated
 
 Test dataset includes 15 questions across categories:
+
 - Persistence & checkpointers
 - State management
 - Tools & streaming
@@ -63,22 +64,24 @@ See: `evaluation/dataset.json`
 **Report Location:** `evaluation/reports/`
 
 **Key Metrics:**
+
 ```json
 {
   "aggregate_metrics": {
-    "success_rate": 1.0,           // % questions answered
-    "avg_aggregate_score": 0.85,   // Overall score (0-1)
-    "avg_context_relevancy": 0.90, // RAGAS: Context precision
-    "avg_faithfulness": 0.88,      // RAGAS: Answer faithfulness
-    "avg_answer_relevancy": 0.92,  // RAGAS: Answer relevancy
-    "avg_topic_coverage": 0.75,    // % expected topics mentioned
-    "avg_code_validity": 0.95,     // % valid code snippets
-    "avg_latency_ms": 2500         // Average response time
+    "success_rate": 1.0, // % questions answered
+    "avg_aggregate_score": 0.85, // Overall score (0-1)
+    "avg_context_relevancy": 0.9, // RAGAS: Context precision
+    "avg_faithfulness": 0.88, // RAGAS: Answer faithfulness
+    "avg_answer_relevancy": 0.92, // RAGAS: Answer relevancy
+    "avg_topic_coverage": 0.75, // % expected topics mentioned
+    "avg_code_validity": 0.95, // % valid code snippets
+    "avg_latency_ms": 2500 // Average response time
   }
 }
 ```
 
 **Score Breakdown:**
+
 - `0.9 - 1.0`: Excellent
 - `0.8 - 0.9`: Good
 - `0.7 - 0.8`: Acceptable
@@ -93,6 +96,7 @@ The repository includes GitHub Actions workflow:
 **Schedule:** Every Monday at 6 AM UTC
 
 **Manual Trigger:**
+
 1. Go to Actions tab
 2. Select "RAGAS Evaluation"
 3. Click "Run workflow"
@@ -144,6 +148,7 @@ Edit `evaluation/dataset.json`:
 ### Adjust Metrics
 
 Edit `evaluation/metrics.py` to change:
+
 - Scoring weights
 - Topic coverage calculation
 - Code validity checks
@@ -153,6 +158,7 @@ Edit `evaluation/metrics.py` to change:
 By default, RAGAS uses `gemini-1.5-flash`. To change:
 
 Edit `evaluation/evaluate.py`:
+
 ```python
 gemini_llm = ChatGoogleGenerativeAI(
     model="gemini-1.5-pro",  # More capable but slower
@@ -166,10 +172,12 @@ gemini_llm = ChatGoogleGenerativeAI(
 ### Per Evaluation Run (15 questions)
 
 **Ollama (agent queries):**
+
 - Cost: $0 (free, local)
 - Requests: ~15 queries + embedding lookups
 
 **Google Gemini (RAGAS metrics):**
+
 - Cost: $0 (free tier)
 - Requests: ~45 (3 metrics × 15 questions)
 - Daily limit: 1500 requests
@@ -185,6 +193,7 @@ gemini_llm = ChatGoogleGenerativeAI(
 ### "GOOGLE_API_KEY not found"
 
 Add to `.env`:
+
 ```bash
 GOOGLE_API_KEY=your_key_here
 ```
@@ -192,6 +201,7 @@ GOOGLE_API_KEY=your_key_here
 ### "Rate limit exceeded"
 
 Google free tier limits:
+
 - 1500 requests/day
 - 60 requests/minute
 
@@ -200,6 +210,7 @@ Wait or upgrade to paid tier.
 ### "No valid results with contexts"
 
 Vector store not built. Run:
+
 ```bash
 python scripts/build_vectorstore.py
 ```
@@ -207,6 +218,7 @@ python scripts/build_vectorstore.py
 ### Low scores
 
 Check:
+
 1. **Vector store quality:** Rebuild with fresh docs
 2. **Retrieval K:** Increase in config.yaml (default: 5)
 3. **LLM model:** Try larger Ollama model (llama3.2:7b)

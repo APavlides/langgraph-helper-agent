@@ -4,18 +4,18 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'data/langchain_llms*.txt'
-      - 'data/langgraph_llms*.txt'
+      - "data/langchain_llms*.txt"
+      - "data/langgraph_llms*.txt"
 
 jobs:
   validate:
     name: Validate Data Files
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Verify all data files exist
         run: |
           python -c "
@@ -34,7 +34,7 @@ jobs:
               print(f'✓ {f} ({size:.1f}MB)')
           print('✓ All data files valid')
           "
-      
+
       - name: Summary
         run: |
           echo "## ✅ Data Files Validated" >> $GITHUB_STEP_SUMMARY

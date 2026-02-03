@@ -4,18 +4,18 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'src/**'
-      - 'evaluation/**'
+      - "src/**"
+      - "evaluation/**"
 
 jobs:
   evaluate:
     name: Run RAGAS Evaluation
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Verify vector store exists
         run: |
           if [ ! -f "data/vectorstore/index.faiss" ]; then
@@ -25,7 +25,7 @@ jobs:
           fi
           size=$(du -h data/vectorstore/index.faiss | cut -f1)
           echo "✓ Vector store found ($size)"
-      
+
       - name: Summary
         run: |
           echo "## ✅ Vector Store Ready" >> $GITHUB_STEP_SUMMARY

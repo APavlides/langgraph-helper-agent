@@ -67,6 +67,7 @@ python -m src.main --mode online "What's new in LangGraph?"
 ## Configuration
 
 **Environment Variables:**
+
 - `LLM_MODEL` - Model name (default: llama3.2:3b)
 - `EMBEDDING_MODEL` - Embedding model (default: nomic-embed-text)
 - `OLLAMA_BASE_URL` - Ollama server (default: http://localhost:11434)
@@ -78,21 +79,48 @@ python -m src.main --mode online "What's new in LangGraph?"
 ## Troubleshooting
 
 **Connection refused?**
+
 ```bash
 curl http://localhost:11434/api/tags  # Check if Ollama is running
 ollama serve  # Start if needed
 ```
 
 **Model not found?**
+
 ```bash
 ollama list
 ollama pull nomic-embed-text
 ```
 
 **Memory issues?**
+
 ```bash
 export LLM_MODEL=llama3.2:1b  # Use smaller model
 ```
+
+## Testing
+
+Run the test suite locally to verify the agent and configuration:
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ -v --cov=src --cov-report=html
+```
+
+**What's Tested:**
+
+- **Config Management** - Environment variables, YAML config, mode validation
+- **State Management** - Message history, context persistence, online mode state
+
+**Continuous Integration:**
+
+Tests automatically run on every commit via GitHub Actions (`.github/workflows/ci.yml`). Push to trigger the test suite.
 
 ## Architecture
 
@@ -108,20 +136,24 @@ export LLM_MODEL=llama3.2:1b  # Use smaller model
 ## Technology Stack
 
 ### Core Frameworks (V1)
+
 - **LangGraph** >= 0.2.0 - State management and agentic workflows
 - **LangChain** >= 0.3.0 - LLM abstractions and tools
 - **langchain-ollama** >= 0.1.0 - Ollama integration
 
 ### LLM & Embeddings
+
 - **Ollama** - Local LLM inference (no API costs)
 - **llama3.2:3b** - Main chat model (2GB)
 - **nomic-embed-text** - Embeddings model
 
 ### Data & Storage
+
 - **FAISS** - Vector similarity search
 - **RecursiveCharacterTextSplitter** - Smart document chunking
 
 ### Optional Features
+
 - **Tavily Search** - Web search for online mode (free tier)
 - **RAGAS** - Evaluation metrics (quality assessment)
 - **Google Gemini** - LLM-as-judge for RAGAS (evaluation only)
@@ -131,6 +163,7 @@ export LLM_MODEL=llama3.2:1b  # Use smaller model
 ### Current Data Sources
 
 The agent uses **publicly available llms.txt documentation**:
+
 - **LangGraph:** https://langchain-ai.github.io/langgraph/llms.txt
 - **LangChain:** https://docs.langchain.com/llms.txt
 
@@ -176,6 +209,7 @@ If you add custom data sources (e.g., blog posts, internal docs), document your 
 1. **Source:** `https://blog.langchain.dev/`
 2. **Update Frequency:** Monthly
 3. **How to Maintain:**
+
 ```bash
 python scripts/refresh_data.py --full
 python scripts/build_vectorstore.py
@@ -189,6 +223,7 @@ git push
 1. **Source:** Your company's internal docs
 2. **Update Frequency:** As needed
 3. **How to Maintain:**
+
 ```bash
 # Sync your internal docs
 cp /path/to/internal/docs.txt data/internal_docs.txt

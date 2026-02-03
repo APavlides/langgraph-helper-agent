@@ -4,10 +4,9 @@ from langchain_community.vectorstores import FAISS
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langgraph.graph import END, START, StateGraph
 
-from src.agent.nodes import (
-    create_generate_node, create_regenerate_node, create_retrieve_node,
-    create_web_search_node, route_after_generate
-)
+from src.agent.nodes import (create_generate_node, create_regenerate_node,
+                             create_retrieve_node, create_web_search_node,
+                             route_after_generate)
 from src.agent.state import AgentState
 from src.config import AgentMode, Settings
 

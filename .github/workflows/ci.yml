@@ -10,22 +10,22 @@ jobs:
   test:
     name: Code & Config Checks
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      
+
       - name: Install dependencies
         run: pip install -e ".[dev]"
-      
+
       - name: Check Python syntax
         run: python -m py_compile src/**/*.py evaluation/**/*.py scripts/*.py
-      
+
       - name: Verify imports
         run: |
           python -c "
@@ -40,18 +40,18 @@ jobs:
               __import__(mod)
               print(f'✓ {mod}')
           "
-      
+
       - name: Validate configuration
         run: |
           python -c "
           from src.config import Settings, AgentMode
-          
+
           s = Settings(mode=AgentMode.OFFLINE)
           print(f'✓ LLM: {s.llm_model}')
           print(f'✓ Embeddings: {s.embedding_model}')
           print(f'✓ Vector store: {s.vectorstore_path}')
           "
-      
+
       - name: Check data files
         run: |
           python -c "
@@ -69,7 +69,7 @@ jobs:
                   print(f'✗ {f} missing')
                   exit(1)
           "
-      
+
       - name: Validate dataset
         run: |
           python -c "
@@ -78,7 +78,10 @@ jobs:
               data = json.load(f)
               print(f'✓ {data[\"metadata\"][\"total_questions\"]} test questions')
           "
-      
+
+      - name: Run tests
+        run: pytest tests/ -v
+
       - name: Summary
         run: |
           echo "## ✅ All Checks Passed" >> $GITHUB_STEP_SUMMARY
@@ -86,3 +89,4 @@ jobs:
           echo "- Imports: OK" >> $GITHUB_STEP_SUMMARY
           echo "- Config: OK" >> $GITHUB_STEP_SUMMARY
           echo "- Data files: OK" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests: OK" >> $GITHUB_STEP_SUMMARY
