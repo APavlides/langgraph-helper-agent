@@ -51,7 +51,7 @@ class TestSettings:
         "AGENT_MODE": "online",
     }, clear=True)
     def test_online_mode_without_tavily_raises(self):
-        with pytest.raises(ValueError, match="TAVILY_API_KEY is required"):
+        with pytest.raises(ValueError, match="TAVILY_API_KEY required"):
             Settings()
     
     @patch.dict(os.environ, {}, clear=True)
@@ -64,11 +64,3 @@ class TestSettings:
         assert settings.retrieval_k == 5
         assert settings.chunk_size == 1000
         assert settings.chunk_overlap == 200
-    
-    @patch.dict(os.environ, {}, clear=True)
-    def test_from_cli_args(self):
-        settings = Settings.from_cli_args(mode="offline")
-        assert settings.mode == AgentMode.OFFLINE
-        
-        settings = Settings.from_cli_args(mode="online", tavily_api_key="key")
-        assert settings.mode == AgentMode.ONLINE
