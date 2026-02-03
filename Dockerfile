@@ -1,8 +1,12 @@
 # LangGraph Helper Agent
 # Multi-stage build for smaller final image
+# 
+# Build: docker build -t langgraph-helper-agent:latest .
+# Run:   docker run --rm langgraph-helper-agent:latest "Your question"
+# Size:  ~1.6GB (includes all dependencies)
 
 # === Build stage ===
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -11,8 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files
-COPY pyproject.toml .
+# Copy dependency files (README.md required by pyproject.toml)
+COPY pyproject.toml README.md .env.example ./
 
 # Create virtual environment and install dependencies
 RUN python -m venv /opt/venv
