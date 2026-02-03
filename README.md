@@ -122,6 +122,30 @@ pytest tests/ -v --cov=src --cov-report=html
 
 Tests automatically run on every commit via GitHub Actions (`.github/workflows/ci.yml`). Push to trigger the test suite.
 
+## Docker & Containerization
+
+The project includes a production-ready Dockerfile with multi-stage builds:
+
+```bash
+# Build image
+docker build -t langgraph-helper-agent:latest .
+
+# Run in offline mode
+docker compose up agent-offline
+
+# Run setup (download docs, build vector store)
+docker compose run --rm setup
+
+# Development shell
+docker compose --profile dev up dev
+```
+
+See [DOCKER.md](DOCKER.md) for comprehensive Docker documentation including:
+- Environment configuration
+- Troubleshooting Ollama connectivity
+- Production deployment options
+- Image optimization tips
+
 ## Architecture
 
 - **LLM:** ChatOllama (llama3.2:3b)
