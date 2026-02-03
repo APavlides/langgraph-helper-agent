@@ -248,16 +248,76 @@ git push
 ```
 src/
   agent/          # LangGraph components
-  config.py       # Configuration
+    graph.py      # State machine and routing logic
+    nodes.py      # Node functions (retrieve, generate, search)
+    state.py      # TypedDict state schema
+  config.py       # Configuration management
   main.py         # CLI entry point
 
 scripts/
-  refresh_data.py         # Download docs
-  build_vectorstore.py    # Build FAISS index
+  refresh_data.py         # Download docs from official sources
+  build_vectorstore.py    # Build FAISS index from documentation
 
-data/              # Docs and vector store
+tests/
+  unit/
+    test_config.py        # Configuration tests
+    test_state.py         # State management tests
+    test_metrics.py       # Evaluation metrics tests
+
+data/
+  langchain_llms.txt      # LangChain API docs (text format)
+  langgraph_llms.txt      # LangGraph API docs (text format)
+  vectorstore/
+    index.faiss           # Vector store for similarity search
+
+evaluation/
+  evaluate.py      # RAGAS evaluation with Google Gemini
+  dataset.json     # 15 test questions across categories
+  metrics.py       # Custom evaluation metrics
+
+.github/workflows/
+  ci.yml                 # Tests on every commit
+  data-refresh.yml       # Data file validation
+  evaluation.yml         # Vector store verification
+
 config.yaml        # Configuration file
+pyproject.toml     # Project dependencies and metadata
 ```
+
+## Next Steps / Learning Opportunities
+
+### 1. **Frontend Development** 🎨
+Build a web interface to interact with the agent:
+- **Backend**: FastAPI (Python web framework) or Flask
+- **Frontend**: React, Vue, or Streamlit (simplest for ML projects)
+- **Learning**: API design, websockets for streaming responses, state management
+
+**Example with Streamlit (5 minutes to build):**
+```bash
+pip install streamlit
+```
+
+### 2. **Deployment & DevOps** 🚀
+- **Docker**: Container the app for easy deployment
+- **Cloud**: Deploy to Hugging Face Spaces, Railway, or AWS
+- **Learning**: DevOps basics, containerization, CI/CD best practices
+
+### 3. **Advanced LangGraph Features** 🔄
+- Sub-graphs for complex workflows
+- Conditional routing with more sophisticated logic
+- Multi-turn conversation memory management
+- Human-in-the-loop approval nodes
+
+### 4. **RAG Optimization** 📊
+- Experiment with different embedding models
+- Implement query expansion or reranking
+- Add semantic caching
+- Compare RAGAS metrics across iterations
+
+### 5. **Monitoring & Observability** 📈
+- Add logging and tracing (LangSmith integration)
+- Performance monitoring (response times, token usage)
+- Error tracking and debugging
 
 ## License
 
