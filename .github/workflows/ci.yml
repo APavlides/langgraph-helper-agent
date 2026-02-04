@@ -24,7 +24,8 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Check Python syntax
-        run: python -m py_compile src/**/*.py evaluation/**/*.py scripts/*.py
+        run: |
+          find src evaluation scripts tests -name "*.py" -type f | xargs python -m py_compile
 
       - name: Verify imports
         run: |
