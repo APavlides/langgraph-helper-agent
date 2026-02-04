@@ -1,8 +1,37 @@
 # LangGraph Helper Agent
 
-An AI agent that answers LangGraph and LangChain questions using local documentation (offline) or web search (online).
+**Summary:** A LangGraph-based RAG agent that answers LangGraph and LangChain questions using local documentation (offline) or web search (online).
+
+## Quick Start (Essential Commands)
+
+```bash
+# 1) Install & start Ollama
+brew install ollama
+ollama pull nomic-embed-text
+ollama pull llama3.2:3b
+ollama serve
+
+# 2) Install project
+git clone https://github.com/APavlides/langgraph-helper-agent.git
+cd langgraph-helper-agent
+python -m venv venv
+source venv/bin/activate
+pip install -e .
+
+# 3) Prepare data (offline mode)
+python scripts/refresh_data.py --full
+python scripts/build_vectorstore.py
+
+# 4) Run (offline)
+python -m src.main "How do I add persistence to a LangGraph agent?"
+
+# 5) Run (online)
+export TAVILY_API_KEY=your_key
+python -m src.main --mode online "What's new in LangGraph?"
+```
 
 **Key Features:**
+
 - Dual operating modes (offline/online)
 - Local LLM via Ollama (no API costs for core functionality)
 - RAG with FAISS vector store
@@ -21,6 +50,7 @@ Built with **LangGraph** (≥ 0.2.0) as a state machine with the following nodes
 5. **route** - Decides next action based on confidence score
 
 **Routing Logic:**
+
 ```
 Query → Retrieve → Generate → Route
                               ├─> [confidence < 0.7 & online mode] → Web Search → Regenerate → END
@@ -30,6 +60,7 @@ Query → Retrieve → Generate → Route
 ### State Management
 
 Uses TypedDict state schema with message history:
+
 - `messages` - Conversation history (HumanMessage, AIMessage)
 - `retrieved_contexts` - Documentation chunks from vector store
 - `confidence_score` - Answer confidence (0-1 scale)
@@ -39,16 +70,19 @@ Uses TypedDict state schema with message history:
 ### Technology Stack
 
 **Required (V1):**
+
 - LangGraph ≥ 0.2.0 - State machine framework
 - LangChain ≥ 0.3.0 - LLM abstractions
 - langchain-ollama ≥ 0.1.0 - Ollama integration
 
 **Core Components:**
+
 - **Ollama** - Local LLM (llama3.2:3b) and embeddings (nomic-embed-text)
 - **FAISS** - Vector store with 10,943 chunks from official docs
 - **Python** 3.10+
 
 **Optional:**
+
 - Tavily API - Web search (online mode)
 - RAGAS + Google Gemini - Evaluation metrics
 
@@ -57,17 +91,20 @@ Uses TypedDict state schema with message history:
 ### Offline Mode (Default)
 
 **How it works:**
+
 1. Query is embedded using local `nomic-embed-text` model
 2. Top-5 relevant docs retrieved from FAISS vector store
 3. Answer generated with `llama3.2:3b` using retrieved context
 4. No external API calls required
 
 **Data sources:**
+
 - LangGraph docs: `https://langchain-ai.github.io/langgraph/llms.txt`
 - LangChain docs: `https://docs.langchain.com/llms.txt`
 - Pre-indexed into FAISS (committed to repo)
 
 **Use when:**
+
 - No internet connection
 - Want fast, cost-free responses
 - Official documentation is sufficient
@@ -75,17 +112,20 @@ Uses TypedDict state schema with message history:
 ### Online Mode
 
 **How it works:**
+
 1. Same as offline mode initially (retrieve + generate)
 2. If confidence < 0.7, triggers Tavily web search
 3. Combines web results with docs for regenerated answer
 4. Returns enriched response with current information
 
 **Services used:**
+
 - **Tavily Search API** - Web search with AI-optimized results
   - Why: Provides recent updates, blog posts, discussions
   - Free tier: 1,000 searches/month
 
 **Use when:**
+
 - Need current information beyond official docs
 - Checking recent updates or community discussions
 - Initial answer lacks confidence
@@ -93,17 +133,20 @@ Uses TypedDict state schema with message history:
 ### Switching Between Modes
 
 **Via environment variable:**
+
 ```bash
 export AGENT_MODE=offline  # or 'online'
 python -m src.main "Your question"
 ```
 
 **Via CLI flag:**
+
 ```bash
 python -m src.main --mode online "Your question"
 ```
 
 **For online mode, set API key:**
+
 ```bash
 export TAVILY_API_KEY=your_key
 ```
@@ -113,6 +156,7 @@ export TAVILY_API_KEY=your_key
 ### Offline Mode
 
 **Data preparation:**
+
 1. Downloaded official llms.txt files from LangChain/LangGraph docs
 2. Split into chunks (1000 chars, 200 overlap) using RecursiveCharacterTextSplitter
 3. Embedded with Ollama `nomic-embed-text`
@@ -120,6 +164,7 @@ export TAVILY_API_KEY=your_key
 5. Committed to Git for reproducibility
 
 **Updating data:**
+
 ```bash
 # Download latest docs
 python scripts/refresh_data.py --full
@@ -136,6 +181,7 @@ git commit -m "chore: update documentation"
 
 **Extending with custom sources:**
 If adding additional data (e.g., company docs):
+
 1. Add text files to `data/` directory
 2. Update `scripts/build_vectorstore.py` to include them
 3. Document update process in this README
@@ -144,12 +190,14 @@ If adding additional data (e.g., company docs):
 ### Online Mode
 
 **Services:**
+
 - **Tavily Search API** - Real-time web search
   - Provides current information beyond static docs
   - Handles: Recent releases, blog posts, Stack Overflow discussions
   - Always up-to-date (no manual refresh needed)
 
 **Why Tavily:**
+
 - AI-optimized search (better than generic web scraping)
 - Clean, structured results
 - Free tier sufficient for development/testing
@@ -203,6 +251,7 @@ python scripts/build_vectorstore.py
 ### 6. Run Agent
 
 **Offline mode (no API key needed):**
+
 ```bash
 # Interactive chat
 python -m src.main --interactive
@@ -212,6 +261,7 @@ python -m src.main "How do I add persistence to a LangGraph agent?"
 ```
 
 **Online mode (requires TAVILY_API_KEY):**
+
 ```bash
 export TAVILY_API_KEY=your_key
 python -m src.main --mode online "What's new in LangGraph 0.2?"
@@ -246,6 +296,7 @@ $ python -m src.main "How do I use checkpointers?"
 ## Configuration
 
 **Environment Variables:**
+
 ```bash
 LLM_MODEL=llama3.2:3b           # Chat model
 EMBEDDING_MODEL=nomic-embed-text # Embeddings
@@ -280,12 +331,14 @@ See [docs/DOCKER.md](docs/DOCKER.md) for full containerization guide.
 ## Troubleshooting
 
 **Ollama connection refused:**
+
 ```bash
 curl http://localhost:11434/api/tags
 ollama serve
 ```
 
 **Out of memory:**
+
 ```bash
 export LLM_MODEL=llama3.2:1b  # Smaller model
 ```
