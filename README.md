@@ -1,14 +1,160 @@
 # LangGraph Helper Agent
 
-An AI agent for answering LangGraph and LangChain questions using local documentation and Ollama.
+An AI agent that answers LangGraph and LangChain questions using local documentation (offline) or web search (online).
 
-## Quick Start
+**Key Features:**
+- Dual operating modes (offline/online)
+- Local LLM via Ollama (no API costs for core functionality)
+- RAG with FAISS vector store
+- LangGraph state machine for routing and decision-making
 
-### Requirements
+## Architecture Overview
 
-- Python 3.10+
-- Ollama (for local LLM and embeddings)
-- LangGraph/LangChain V1
+### Graph Design
+
+Built with **LangGraph** (≥ 0.2.0) as a state machine with the following nodes:
+
+1. **retrieve** - Fetches relevant docs from FAISS vector store
+2. **generate** - Creates answer using ChatOllama (llama3.2:3b)
+3. **web_search** - Searches web via Tavily API (online mode only)
+4. **regenerate** - Combines web results with docs for improved answer
+5. **route** - Decides next action based on confidence score
+
+**Routing Logic:**
+```
+Query → Retrieve → Generate → Route
+                              ├─> [confidence < 0.7 & online mode] → Web Search → Regenerate → END
+                              └─> [else] → END
+```
+
+### State Management
+
+Uses TypedDict state schema with message history:
+- `messages` - Conversation history (HumanMessage, AIMessage)
+- `retrieved_contexts` - Documentation chunks from vector store
+- `confidence_score` - Answer confidence (0-1 scale)
+- `mode` - offline or online
+- `web_search_results` - Search results (online mode only)
+
+### Technology Stack
+
+**Required (V1):**
+- LangGraph ≥ 0.2.0 - State machine framework
+- LangChain ≥ 0.3.0 - LLM abstractions
+- langchain-ollama ≥ 0.1.0 - Ollama integration
+
+**Core Components:**
+- **Ollama** - Local LLM (llama3.2:3b) and embeddings (nomic-embed-text)
+- **FAISS** - Vector store with 10,943 chunks from official docs
+- **Python** 3.10+
+
+**Optional:**
+- Tavily API - Web search (online mode)
+- RAGAS + Google Gemini - Evaluation metrics
+
+## Operating Modes
+
+### Offline Mode (Default)
+
+**How it works:**
+1. Query is embedded using local `nomic-embed-text` model
+2. Top-5 relevant docs retrieved from FAISS vector store
+3. Answer generated with `llama3.2:3b` using retrieved context
+4. No external API calls required
+
+**Data sources:**
+- LangGraph docs: `https://langchain-ai.github.io/langgraph/llms.txt`
+- LangChain docs: `https://docs.langchain.com/llms.txt`
+- Pre-indexed into FAISS (committed to repo)
+
+**Use when:**
+- No internet connection
+- Want fast, cost-free responses
+- Official documentation is sufficient
+
+### Online Mode
+
+**How it works:**
+1. Same as offline mode initially (retrieve + generate)
+2. If confidence < 0.7, triggers Tavily web search
+3. Combines web results with docs for regenerated answer
+4. Returns enriched response with current information
+
+**Services used:**
+- **Tavily Search API** - Web search with AI-optimized results
+  - Why: Provides recent updates, blog posts, discussions
+  - Free tier: 1,000 searches/month
+
+**Use when:**
+- Need current information beyond official docs
+- Checking recent updates or community discussions
+- Initial answer lacks confidence
+
+### Switching Between Modes
+
+**Via environment variable:**
+```bash
+export AGENT_MODE=offline  # or 'online'
+python -m src.main "Your question"
+```
+
+**Via CLI flag:**
+```bash
+python -m src.main --mode online "Your question"
+```
+
+**For online mode, set API key:**
+```bash
+export TAVILY_API_KEY=your_key
+```
+
+## Data Freshness Strategy
+
+### Offline Mode
+
+**Data preparation:**
+1. Downloaded official llms.txt files from LangChain/LangGraph docs
+2. Split into chunks (1000 chars, 200 overlap) using RecursiveCharacterTextSplitter
+3. Embedded with Ollama `nomic-embed-text`
+4. Indexed in FAISS (10,943 chunks)
+5. Committed to Git for reproducibility
+
+**Updating data:**
+```bash
+# Download latest docs
+python scripts/refresh_data.py --full
+
+# Rebuild vector store (~2 minutes)
+python scripts/build_vectorstore.py
+
+# Commit updated index
+git add data/vectorstore/
+git commit -m "chore: update documentation"
+```
+
+**Frequency recommendation:** Weekly or when major LangGraph releases occur
+
+**Extending with custom sources:**
+If adding additional data (e.g., company docs):
+1. Add text files to `data/` directory
+2. Update `scripts/build_vectorstore.py` to include them
+3. Document update process in this README
+4. Rebuild and commit updated index
+
+### Online Mode
+
+**Services:**
+- **Tavily Search API** - Real-time web search
+  - Provides current information beyond static docs
+  - Handles: Recent releases, blog posts, Stack Overflow discussions
+  - Always up-to-date (no manual refresh needed)
+
+**Why Tavily:**
+- AI-optimized search (better than generic web scraping)
+- Clean, structured results
+- Free tier sufficient for development/testing
+
+## Setup Instructions
 
 ### 1. Install Ollama
 
@@ -16,332 +162,139 @@ An AI agent for answering LangGraph and LangChain questions using local document
 # macOS
 brew install ollama
 
-# Or download from: https://ollama.ai/download
+# Linux/Windows: https://ollama.ai/download
 ```
 
-### 2. Pull Models
+### 2. Pull Required Models
 
 ```bash
-ollama pull nomic-embed-text
-ollama pull llama3.2:3b
+ollama pull nomic-embed-text  # Embeddings (273MB)
+ollama pull llama3.2:3b       # Chat model (2GB)
 ```
 
-### 3. Start Ollama
+### 3. Start Ollama Server
 
 ```bash
-ollama serve  # Runs in background on macOS
+ollama serve  # Starts on http://localhost:11434
 ```
 
-### 4. Setup Project
+### 4. Clone and Install Project
 
 ```bash
-git clone https://github.com/yourusername/langgraph-helper-agent.git
+git clone https://github.com/APavlides/langgraph-helper-agent.git
 cd langgraph-helper-agent
 
 python -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 pip install -e .
 ```
 
-### 5. Download Data & Build Vector Store
+### 5. Build Vector Store (First Time Only)
 
 ```bash
+# Download official docs
 python scripts/refresh_data.py --full
+
+# Build FAISS index (~2 minutes)
 python scripts/build_vectorstore.py
 ```
 
 ### 6. Run Agent
 
+**Offline mode (no API key needed):**
 ```bash
-# Interactive mode
+# Interactive chat
 python -m src.main --interactive
 
 # Single question
 python -m src.main "How do I add persistence to a LangGraph agent?"
+```
 
-# Online mode (requires TAVILY_API_KEY)
-python -m src.main --mode online "What's new in LangGraph?"
+**Online mode (requires TAVILY_API_KEY):**
+```bash
+export TAVILY_API_KEY=your_key
+python -m src.main --mode online "What's new in LangGraph 0.2?"
+```
+
+## Example Run
+
+```bash
+$ python -m src.main "How do I use checkpointers?"
+
+╭──────────────────────────── Answer ────────────────────────────╮
+│ To use checkpointers in LangGraph:                             │
+│                                                                 │
+│ 1. Import a checkpointer:                                      │
+│    from langgraph.checkpoint.memory import MemorySaver         │
+│                                                                 │
+│ 2. Add to your graph:                                          │
+│    checkpointer = MemorySaver()                                │
+│    graph = graph.compile(checkpointer=checkpointer)            │
+│                                                                 │
+│ 3. Use with thread_id for persistence:                         │
+│    config = {"configurable": {"thread_id": "1"}}               │
+│    graph.invoke({"messages": [...]}, config)                   │
+│                                                                 │
+│ Available checkpointers: MemorySaver, SqliteSaver,             │
+│ PostgresSaver                                                   │
+╰─────────────────────────────────────────────────────────────────╯
+
+📊 Confidence: 0.92 | 📚 Sources: 3 docs | ⚡ Mode: offline
 ```
 
 ## Configuration
 
 **Environment Variables:**
-
-- `LLM_MODEL` - Model name (default: llama3.2:3b)
-- `EMBEDDING_MODEL` - Embedding model (default: nomic-embed-text)
-- `OLLAMA_BASE_URL` - Ollama server (default: http://localhost:11434)
-- `AGENT_MODE` - offline or online (default: offline)
-- `TAVILY_API_KEY` - For online mode (optional)
-
-**File:** Edit `config.yaml` for advanced settings
-
-## Troubleshooting
-
-**Connection refused?**
-
 ```bash
-curl http://localhost:11434/api/tags  # Check if Ollama is running
-ollama serve  # Start if needed
+LLM_MODEL=llama3.2:3b           # Chat model
+EMBEDDING_MODEL=nomic-embed-text # Embeddings
+OLLAMA_BASE_URL=http://localhost:11434
+AGENT_MODE=offline              # or 'online'
+TAVILY_API_KEY=your_key         # For online mode
 ```
 
-**Model not found?**
-
-```bash
-ollama list
-ollama pull nomic-embed-text
-```
-
-**Memory issues?**
-
-```bash
-export LLM_MODEL=llama3.2:1b  # Use smaller model
-```
+**Config file:** `config.yaml` for advanced settings (see [CONFIGURATION.md](CONFIGURATION.md))
 
 ## Testing
-
-Run the test suite locally to verify the agent and configuration:
 
 ```bash
 # Install dev dependencies
 pip install -e ".[dev]"
 
-# Run tests
+# Run tests (33 tests)
 pytest tests/ -v
-
-# Run with coverage
-pytest tests/ -v --cov=src --cov-report=html
 ```
 
-**What's Tested:**
+**CI/CD:** Tests run automatically on every commit via GitHub Actions
 
-- **Config Management** - Environment variables, YAML config, mode validation
-- **State Management** - Message history, context persistence, online mode state
-
-**Continuous Integration:**
-
-Tests automatically run on every commit via GitHub Actions (`.github/workflows/ci.yml`). Push to trigger the test suite.
-
-## Docker & Containerization
-
-The project includes a production-ready Dockerfile with multi-stage builds:
+## Docker
 
 ```bash
-# Build image
-docker build -t langgraph-helper-agent:latest .
-
-# Run in offline mode
-docker compose up agent-offline
-
-# Run setup (download docs, build vector store)
-docker compose run --rm setup
-
-# Development shell
-docker compose --profile dev up dev
+docker build -t langgraph-helper-agent .
+docker run --rm langgraph-helper-agent "Your question"
 ```
 
-See [DOCKER.md](DOCKER.md) for comprehensive Docker documentation including:
-- Environment configuration
-- Troubleshooting Ollama connectivity
-- Production deployment options
-- Image optimization tips
+See [DOCKER.md](DOCKER.md) for full containerization guide.
 
-## Architecture
+## Troubleshooting
 
-- **LLM:** ChatOllama (llama3.2:3b)
-- **Embeddings:** OllamaEmbeddings (nomic-embed-text)
-- **Vector Store:** FAISS
-- **Framework:** LangGraph
-
-**Flow:** Query → Retrieve docs → Generate answer
-
-**Online mode:** Also triggers web search if confidence < 0.7
-
-## Technology Stack
-
-### Core Frameworks (V1)
-
-- **LangGraph** >= 0.2.0 - State management and agentic workflows
-- **LangChain** >= 0.3.0 - LLM abstractions and tools
-- **langchain-ollama** >= 0.1.0 - Ollama integration
-
-### LLM & Embeddings
-
-- **Ollama** - Local LLM inference (no API costs)
-- **llama3.2:3b** - Main chat model (2GB)
-- **nomic-embed-text** - Embeddings model
-
-### Data & Storage
-
-- **FAISS** - Vector similarity search
-- **RecursiveCharacterTextSplitter** - Smart document chunking
-
-### Optional Features
-
-- **Tavily Search** - Web search for online mode (free tier)
-- **RAGAS** - Evaluation metrics (quality assessment)
-- **Google Gemini** - LLM-as-judge for RAGAS (evaluation only)
-
-## Data Freshness Strategy
-
-### Current Data Sources
-
-The agent uses **publicly available llms.txt documentation**:
-
-- **LangGraph:** https://langchain-ai.github.io/langgraph/llms.txt
-- **LangChain:** https://docs.langchain.com/llms.txt
-
-These are maintained by the LangChain team and always reflect the latest API documentation.
-
-### Keeping Data Fresh
-
-#### For llms.txt Sources (Built-in)
-
-Download fresh documentation and rebuild the vector store:
-
+**Ollama connection refused:**
 ```bash
-# Download latest docs
-python scripts/refresh_data.py --full
-
-# Rebuild vector store with Ollama
-python scripts/build_vectorstore.py
-
-# Commit and push
-git add data/vectorstore/
-git commit -m "chore: update documentation data"
-git push
+curl http://localhost:11434/api/tags
+ollama serve
 ```
 
-#### Automating Updates (Optional)
-
-Set up a local cron job to refresh weekly:
-
+**Out of memory:**
 ```bash
-# Edit crontab
-crontab -e
-
-# Add this line (runs Sunday 2 AM)
-0 2 * * 0 cd /path/to/langgraph-helper-agent && python scripts/refresh_data.py --full && python scripts/build_vectorstore.py && git add data/vectorstore/ && git commit -m "chore: auto-update docs" && git push origin master
+export LLM_MODEL=llama3.2:1b  # Smaller model
 ```
 
-### Extending with Additional Data Sources
+## Additional Documentation
 
-If you add custom data sources (e.g., blog posts, internal docs), document your maintenance strategy:
-
-#### Example: Adding Blog Posts
-
-1. **Source:** `https://blog.langchain.dev/`
-2. **Update Frequency:** Monthly
-3. **How to Maintain:**
-
-```bash
-python scripts/refresh_data.py --full
-python scripts/build_vectorstore.py
-git add data/vectorstore/
-git commit -m "chore: monthly data refresh"
-git push
-```
-
-#### Example: Adding Internal Documentation
-
-1. **Source:** Your company's internal docs
-2. **Update Frequency:** As needed
-3. **How to Maintain:**
-
-```bash
-# Sync your internal docs
-cp /path/to/internal/docs.txt data/internal_docs.txt
-
-# Rebuild and commit
-python scripts/build_vectorstore.py
-git add data/vectorstore/
-git commit -m "chore: update internal documentation"
-git push
-```
-
-### Key Benefits
-
-- ✅ **Llms.txt sources** - Automatically downloaded, easy to refresh
-- ✅ **Custom sources** - Maintenance plan clearly documented
-- ✅ **Version control** - All data changes tracked in Git
-- ✅ **Reproducible** - Others can rebuild the exact same index
-- ✅ **No API costs** - All processing happens locally with Ollama
-
-## Project Structure
-
-```
-src/
-  agent/          # LangGraph components
-    graph.py      # State machine and routing logic
-    nodes.py      # Node functions (retrieve, generate, search)
-    state.py      # TypedDict state schema
-  config.py       # Configuration management
-  main.py         # CLI entry point
-
-scripts/
-  refresh_data.py         # Download docs from official sources
-  build_vectorstore.py    # Build FAISS index from documentation
-
-tests/
-  unit/
-    test_config.py        # Configuration tests
-    test_state.py         # State management tests
-    test_metrics.py       # Evaluation metrics tests
-
-data/
-  langchain_llms.txt      # LangChain API docs (text format)
-  langgraph_llms.txt      # LangGraph API docs (text format)
-  vectorstore/
-    index.faiss           # Vector store for similarity search
-
-evaluation/
-  evaluate.py      # RAGAS evaluation with Google Gemini
-  dataset.json     # 15 test questions across categories
-  metrics.py       # Custom evaluation metrics
-
-.github/workflows/
-  ci.yml                 # Tests on every commit
-  data-refresh.yml       # Data file validation
-  evaluation.yml         # Vector store verification
-
-config.yaml        # Configuration file
-pyproject.toml     # Project dependencies and metadata
-```
-
-## Next Steps / Learning Opportunities
-
-### 1. **Frontend Development** 🎨
-Build a web interface to interact with the agent:
-- **Backend**: FastAPI (Python web framework) or Flask
-- **Frontend**: React, Vue, or Streamlit (simplest for ML projects)
-- **Learning**: API design, websockets for streaming responses, state management
-
-**Example with Streamlit (5 minutes to build):**
-```bash
-pip install streamlit
-```
-
-### 2. **Deployment & DevOps** 🚀
-- **Docker**: Container the app for easy deployment
-- **Cloud**: Deploy to Hugging Face Spaces, Railway, or AWS
-- **Learning**: DevOps basics, containerization, CI/CD best practices
-
-### 3. **Advanced LangGraph Features** 🔄
-- Sub-graphs for complex workflows
-- Conditional routing with more sophisticated logic
-- Multi-turn conversation memory management
-- Human-in-the-loop approval nodes
-
-### 4. **RAG Optimization** 📊
-- Experiment with different embedding models
-- Implement query expansion or reranking
-- Add semantic caching
-- Compare RAGAS metrics across iterations
-
-### 5. **Monitoring & Observability** 📈
-- Add logging and tracing (LangSmith integration)
-- Performance monitoring (response times, token usage)
-- Error tracking and debugging
+- [CONFIGURATION.md](CONFIGURATION.md) - Advanced configuration options
+- [DOCKER.md](DOCKER.md) - Docker deployment guide
+- [EVALUATION.md](EVALUATION.md) - RAGAS evaluation setup
 
 ## License
 
