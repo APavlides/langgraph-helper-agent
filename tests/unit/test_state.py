@@ -1,6 +1,7 @@
 """Tests for agent state management."""
 import pytest
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
+
 from src.agent.state import AgentState
 
 
