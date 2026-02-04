@@ -4,6 +4,8 @@
 
 ## Quick Start (Essential Commands)
 
+**Recommended (Docker/Compose for reproducibility):**
+
 ```bash
 # 1) Install & start Ollama
 brew install ollama
@@ -11,23 +13,32 @@ ollama pull nomic-embed-text
 ollama pull llama3.2:3b
 ollama serve
 
-# 2) Install project
+# 2) Clone repo
 git clone https://github.com/APavlides/langgraph-helper-agent.git
 cd langgraph-helper-agent
+
+# 3) Build & prepare data
+docker compose run --rm setup
+
+# 4) Run (offline)
+docker compose up agent-offline
+
+# 5) Run (online)
+export TAVILY_API_KEY=your_key
+docker compose up agent-online
+```
+
+**Optional (Local Python install):**
+
+```bash
 python -m venv venv
 source venv/bin/activate
 pip install -e .
 
-# 3) Prepare data (offline mode)
 python scripts/refresh_data.py --full
 python scripts/build_vectorstore.py
 
-# 4) Run (offline)
 python -m src.main "How do I add persistence to a LangGraph agent?"
-
-# 5) Run (online)
-export TAVILY_API_KEY=your_key
-python -m src.main --mode online "What's new in LangGraph?"
 ```
 
 **Key Features:**
