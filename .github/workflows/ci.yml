@@ -27,6 +27,12 @@ jobs:
         run: |
           find src evaluation scripts tests -name "*.py" -type f | xargs python -m py_compile
 
+      - name: Type check with mypy
+        run: mypy src/ --ignore-missing-imports
+
+      - name: Lint with ruff
+        run: ruff check src/ tests/ evaluation/ scripts/
+
       - name: Verify imports
         run: |
           python -c "
@@ -87,6 +93,8 @@ jobs:
         run: |
           echo "## ✅ All Checks Passed" >> $GITHUB_STEP_SUMMARY
           echo "- Syntax: OK" >> $GITHUB_STEP_SUMMARY
+          echo "- Type checks (mypy): OK" >> $GITHUB_STEP_SUMMARY
+          echo "- Linting (ruff): OK" >> $GITHUB_STEP_SUMMARY
           echo "- Imports: OK" >> $GITHUB_STEP_SUMMARY
           echo "- Config: OK" >> $GITHUB_STEP_SUMMARY
           echo "- Data files: OK" >> $GITHUB_STEP_SUMMARY
