@@ -60,19 +60,20 @@ python -m src.main --mode online "What's new in LangGraph?"
 
 Built with **LangGraph** (≥ 0.2.0) as a state machine with the following nodes:
 
-1. **retrieve** - Fetches relevant docs from FAISS vector store
+1. **retrieve** - Fetches relevant docs from FAISS vector store, reranks with cross-encoder for quality assessment
 2. **generate** - Creates answer using ChatOllama (llama3.2:3b)
-3. **web_search** - Searches web via Tavily API (online mode only)
-4. **regenerate** - Combines web results with docs for improved answer
-5. **route** - Decides next action based on confidence score
+3. **web_search_and_generate** - Searches web via Tavily API + generates enhanced answer (online mode)
+4. **route_after_retrieve** - Decides whether to use docs or web search based on reranker scores
 
 **Routing Logic:**
 
 ```
-Query → Retrieve → Generate → Route
-                              ├─> [confidence < 0.7 & online mode] → Web Search → Regenerate → END
-                              └─> [else] → END
+Query → Retrieve + Rerank → Route
+                           ├─> [reranker score < 0.0 & online mode] → Web Search + Generate → END
+                           └─> [else] → Generate → END
 ```
+
+**Reranking:** Uses `cross-encoder/ms-marco-MiniLM-L-6-v2` to assess retrieval quality. Scores < 0.0 indicate poor relevance, triggering web search in online mode.
 
 ### State Management
 
@@ -80,7 +81,7 @@ Uses TypedDict state schema with message history:
 
 - `messages` - Conversation history (HumanMessage, AIMessage)
 - `retrieved_contexts` - Documentation chunks from vector store
-- `confidence_score` - Answer confidence (0-1 scale)
+- `retrieval_score` - Cross-encoder reranking score (negative = poor relevance)
 - `mode` - offline or online
 - `web_search_results` - Search results (online mode only)
 
@@ -91,11 +92,13 @@ Uses TypedDict state schema with message history:
 - LangGraph ≥ 0.2.0 - State machine framework
 - LangChain ≥ 0.3.0 - LLM abstractions
 - langchain-ollama ≥ 0.1.0 - Ollama integration
+- sentence-transformers ≥ 2.2.0 - Cross-encoder reranking
 
 **Core Components:**
 
 - **Ollama** - Local LLM (llama3.2:3b) and embeddings (nomic-embed-text)
 - **FAISS** - Vector store with 10,943 chunks from official docs
+- **Cross-encoder** - ms-marco-MiniLM-L-6-v2 for retrieval quality assessment
 - **Python** 3.10+
 
 **Optional:**
@@ -130,10 +133,11 @@ Uses TypedDict state schema with message history:
 
 **How it works:**
 
-1. Same as offline mode initially (retrieve + generate)
-2. If confidence < 0.7, triggers Tavily web search
-3. Combines web results with docs for regenerated answer
-4. Returns enriched response with current information
+1. Query is embedded and retrieves top docs from FAISS
+2. Cross-encoder reranks results to assess true relevance
+3. If reranker score < 0.0, triggers Tavily web search
+4. Combines web results with docs for comprehensive answer
+5. Returns enriched response with current information
 
 **Services used:**
 
@@ -145,7 +149,7 @@ Uses TypedDict state schema with message history:
 
 - Need current information beyond official docs
 - Checking recent updates or community discussions
-- Initial answer lacks confidence
+- Question not well-covered in official documentation
 
 ### Switching Between Modes
 
@@ -236,6 +240,8 @@ brew install ollama
 ollama pull nomic-embed-text  # Embeddings (273MB)
 ollama pull llama3.2:3b       # Chat model (2GB)
 ```
+
+**Note:** The cross-encoder reranking model (`ms-marco-MiniLM-L-6-v2`, ~90MB) downloads automatically on first use. You'll see loading progress in stderr - this is normal.
 
 ### 3. Start Ollama Server
 
