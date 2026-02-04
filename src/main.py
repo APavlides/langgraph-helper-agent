@@ -106,8 +106,7 @@ def run_single_query(agent, question: str, mode: AgentMode, verbose: bool = Fals
             "messages": [HumanMessage(content=question)],
             "retrieved_contexts": [],
             "mode": mode.value,
-            "needs_web_search": False,
-            "confidence_score": None,
+            "retrieval_score": None,
             "web_search_results": None,
         })
     
@@ -115,9 +114,8 @@ def run_single_query(agent, question: str, mode: AgentMode, verbose: bool = Fals
     if result["messages"]:
         last_message = result["messages"][-1]
         response = last_message.content
-        confidence = result.get("confidence_score")
         
-        display_response(response, verbose, confidence)
+        display_response(response, verbose)
         
         if verbose and result.get("retrieved_contexts"):
             console.print(f"\n[dim]Retrieved {len(result['retrieved_contexts'])} context chunks[/dim]")
@@ -166,6 +164,43 @@ def run_interactive(agent, settings: Settings, verbose: bool = False) -> None:
         
         # Run query
         run_single_query(agent, user_input, settings.mode, verbose)
+
+
+def run_agent(question: str, mode: str = "offline", verbose: bool = False) -> None:
+    """Run a single question through the agent (for scripting).
+    
+    Args:
+        question: Question to ask
+        mode: "offline" or "online"
+        verbose: Show additional information
+    """
+    # Create settings
+    mode_enum = AgentMode(mode)
+    settings = Settings(mode=mode_enum)
+    
+    # Create agent (cached globally if needed)
+    agent = create_agent(settings)
+    
+    # Run query
+    result = agent.invoke({
+        "messages": [HumanMessage(content=question)],
+        "retrieved_contexts": [],
+        "mode": mode,
+        "retrieval_score": None,
+        "web_search_results": None,
+    })
+    
+    # Extract and display response
+    if result["messages"]:
+        last_message = result["messages"][-1]
+        response = last_message.content
+        
+        display_response(response, verbose)
+        
+        if verbose and result.get("retrieved_contexts"):
+            console.print(f"\n[dim]Retrieved {len(result['retrieved_contexts'])} context chunks[/dim]")
+            if result.get("web_search_results"):
+                console.print(f"[dim]Web search results: {len(result['web_search_results'])}[/dim]")
 
 
 def main() -> int:
