@@ -254,7 +254,7 @@ AGENT_MODE=offline              # or 'online'
 TAVILY_API_KEY=your_key         # For online mode
 ```
 
-**Config file:** `config.yaml` for advanced settings (see [CONFIGURATION.md](CONFIGURATION.md))
+**Config file:** `config.yaml` for advanced settings (see [docs/CONFIGURATION.md](docs/CONFIGURATION.md))
 
 ## Testing
 
@@ -275,7 +275,7 @@ docker build -t langgraph-helper-agent .
 docker run --rm langgraph-helper-agent "Your question"
 ```
 
-See [DOCKER.md](DOCKER.md) for full containerization guide.
+See [docs/DOCKER.md](docs/DOCKER.md) for full containerization guide.
 
 ## Troubleshooting
 
@@ -292,9 +292,9 @@ export LLM_MODEL=llama3.2:1b  # Smaller model
 
 ## Additional Documentation
 
-- [CONFIGURATION.md](CONFIGURATION.md) - Advanced configuration options
-- [DOCKER.md](DOCKER.md) - Docker deployment guide
-- [EVALUATION.md](EVALUATION.md) - RAGAS evaluation setup
+- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) - Advanced configuration options
+- [docs/DOCKER.md](docs/DOCKER.md) - Docker deployment guide
+- [docs/EVALUATION.md](docs/EVALUATION.md) - RAGAS evaluation setup
 
 ## License
 
