@@ -10,17 +10,12 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
-    { name = "Your Name", email = "your.email@example.com" }
+    { name = "Alex Pavlides", email = "alex.pavlides@hotmail.com" }
 ]
 keywords = ["langgraph", "langchain", "ai", "agent", "rag"]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
 ]
 
 dependencies = [
@@ -31,8 +26,9 @@ dependencies = [
     "faiss-cpu>=1.7.4",
     "httpx>=0.27.0",
     "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",  # For config.yaml
-    "rich>=13.0.0",  # For nice CLI output
+    "pyyaml>=6.0.0",
+    "rich>=13.0.0",
+    "sentence-transformers>=2.2.0",
 ]
 
 [project.optional-dependencies]
@@ -48,8 +44,8 @@ eval = [
     "datasets>=2.18.0",
 ]
 online = [
+    "langchain-tavily>=0.1.0",
     "tavily-python>=0.3.0",
-    # Alternative: "duckduckgo-search>=5.0.0",
 ]
 all = [
     "langgraph-helper-agent[dev,eval,online]",

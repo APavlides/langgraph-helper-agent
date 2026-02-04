@@ -4,9 +4,12 @@ from langchain_community.vectorstores import FAISS
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langgraph.graph import END, START, StateGraph
 
-from src.agent.nodes import (create_generate_node, create_regenerate_node,
-                             create_retrieve_node, create_web_search_node,
-                             route_after_generate)
+from src.agent.nodes import (
+    create_generate_node,
+    create_retrieve_node,
+    create_web_search_and_generate_node,
+    route_after_retrieve,
+)
 from src.agent.state import AgentState
 from src.config import AgentMode, Settings
 
@@ -16,13 +19,13 @@ def create_retriever(settings: Settings):
         model=settings.embedding_model,
         base_url=settings.ollama_base_url,
     )
-    
+
     if not settings.vectorstore_path.exists():
         raise FileNotFoundError(
             f"Vector store not found at {settings.vectorstore_path}. "
             "Run 'python scripts/build_vectorstore.py' first."
         )
-    
+
     vectorstore = FAISS.load_local(
         str(settings.vectorstore_path),
         embeddings,
@@ -45,15 +48,17 @@ def create_llm(settings: Settings):
 def create_search_tool(settings: Settings):
     if settings.mode != AgentMode.ONLINE:
         return None
-    
+
     if settings.tavily_api_key:
         from langchain_tavily import TavilySearch
+
         return TavilySearch(
             api_key=settings.tavily_api_key,
             max_results=settings.max_web_results,
         )
-    
+
     from langchain_community.tools import DuckDuckGoSearchResults
+
     return DuckDuckGoSearchResults(max_results=settings.max_web_results)
 
 
@@ -61,34 +66,38 @@ def create_agent(settings: Settings):
     retriever = create_retriever(settings)
     llm = create_llm(settings)
     search_tool = create_search_tool(settings)
-    
+
     retrieve_node = create_retrieve_node(retriever)
-    generate_node = create_generate_node(llm, settings.confidence_threshold)
-    
+    generate_node = create_generate_node(llm)
+
     graph = StateGraph(AgentState)
     graph.add_node("retrieve", retrieve_node)
     graph.add_node("generate", generate_node)
-    
+
     if settings.mode == AgentMode.ONLINE and search_tool:
-        web_search_node = create_web_search_node(search_tool)
-        regenerate_node = create_regenerate_node(llm)
-        graph.add_node("web_search", web_search_node)
-        graph.add_node("regenerate", regenerate_node)
-    
-    graph.add_edge(START, "retrieve")
-    graph.add_edge("retrieve", "generate")
-    
-    if settings.mode == AgentMode.ONLINE and search_tool:
-        graph.add_conditional_edges(
-            "generate",
-            route_after_generate,
-            {"web_search": "web_search", "__end__": END}
+        web_search_and_generate_node = create_web_search_and_generate_node(
+            llm, search_tool
         )
-        graph.add_edge("web_search", "regenerate")
-        graph.add_edge("regenerate", END)
+        graph.add_node("web_search_and_generate", web_search_and_generate_node)
+
+    graph.add_edge(START, "retrieve")
+
+    if settings.mode == AgentMode.ONLINE and search_tool:
+        # Route after retrieve based on retrieval quality
+        graph.add_conditional_edges(
+            "retrieve",
+            route_after_retrieve,
+            {
+                "generate": "generate",
+                "web_search_and_generate": "web_search_and_generate",
+            },
+        )
+        graph.add_edge("web_search_and_generate", END)
     else:
-        graph.add_edge("generate", END)
-    
+        graph.add_edge("retrieve", "generate")
+
+    graph.add_edge("generate", END)
+
     return graph.compile()
 
 

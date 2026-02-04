@@ -1,21 +1,78 @@
 """Agent node functions."""
 
 from langchain.chat_models.base import BaseChatModel
+from sentence_transformers import CrossEncoder
 
 from src.agent.state import AgentState
 
+# Lazy load reranker to avoid startup cost
+_reranker = None
+
+
+def get_reranker():
+    """Lazy load cross-encoder for reranking."""
+    global _reranker
+    if _reranker is None:
+        _reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    return _reranker
+
 
 def create_retrieve_node(retriever):
-    """Create retrieval node."""
+    """Create retrieval node with reranking."""
+
     def retrieve(state: AgentState):
         query = state["messages"][-1].content if state["messages"] else ""
-        docs = retriever.invoke(query)
-        return {"retrieved_contexts": [doc.page_content for doc in docs]}
+        # Get more candidates for reranking
+        docs_with_scores = retriever.vectorstore.similarity_search_with_score(
+            query, k=retriever.search_kwargs.get("k", 5) * 2  # Get 2x for reranking
+        )
+
+        # Rerank with cross-encoder
+        reranker = get_reranker()
+        doc_texts = [doc.page_content for doc, _ in docs_with_scores]
+        rerank_scores = reranker.predict([(query, text) for text in doc_texts])
+
+        # Sort by rerank scores (higher is better for cross-encoder)
+        ranked_docs = sorted(
+            zip(doc_texts, rerank_scores), key=lambda x: x[1], reverse=True
+        )
+
+        # Take top k after reranking
+        k = retriever.search_kwargs.get("k", 5)
+        top_docs = ranked_docs[:k]
+        contexts = [doc for doc, _ in top_docs]
+        avg_score = (
+            sum(score for _, score in top_docs) / len(top_docs) if top_docs else 0.0
+        )
+
+        return {
+            "retrieved_contexts": contexts,
+            "retrieval_score": avg_score,
+        }
+
     return retrieve
 
 
-def create_generate_node(llm: BaseChatModel, confidence_threshold: float):
+def route_after_retrieve(state: AgentState) -> str:
+    """Route based on retrieval quality.
+
+    Cross-encoder scores: higher = more relevant
+    Typical: > 0.5 = good, 0.2-0.5 = questionable, < 0.2 = poor
+    """
+    if state["mode"] == "offline":
+        return "generate"
+
+    retrieval_score = state.get("retrieval_score", 0.0)
+
+    if retrieval_score < 0.3:  # Low reranker confidence
+        return "web_search_and_generate"
+
+    return "generate"
+
+
+def create_generate_node(llm: BaseChatModel):
     """Create generation node."""
+
     def generate(state: AgentState):
         query = state["messages"][-1].content if state["messages"] else ""
         context = "\n\n".join(state["retrieved_contexts"])
@@ -28,28 +85,23 @@ Question: {query}
 
 Answer:"""
         response = llm.invoke(prompt)
-        return {
-            "messages": [response],
-            "confidence_score": 0.9,
-            "needs_web_search": False,
-        }
+        return {"messages": [response]}
+
     return generate
 
 
-def create_web_search_node(search_tool):
-    """Create web search node."""
-    def web_search(state: AgentState):
-        query = state["messages"][-1].content if state["messages"] else ""
-        results = search_tool.invoke(query)
-        return {"web_search_results": results}
-    return web_search
+def create_web_search_and_generate_node(llm: BaseChatModel, search_tool):
+    """Search web and generate with combined context."""
 
-
-def create_regenerate_node(llm: BaseChatModel):
-    """Create regeneration node with web results."""
-    def regenerate(state: AgentState):
+    def web_search_and_generate(state: AgentState):
         query = state["messages"][-1].content if state["messages"] else ""
-        web_results = "\n\n".join(state.get("web_search_results", []) or [])
+        # Perform web search
+        search_results = search_tool.invoke(query)
+        web_results = (
+            "\n\n".join(search_results)
+            if isinstance(search_results, list)
+            else str(search_results)
+        )
         context = "\n\n".join(state["retrieved_contexts"])
         prompt = f"""Answer the question using both the context and web results.
 
@@ -63,15 +115,9 @@ Question: {query}
 
 Answer:"""
         response = llm.invoke(prompt)
-        return {"messages": [response]}
-    return regenerate
+        return {
+            "messages": [response],
+            "web_search_results": search_results,
+        }
 
-
-def route_after_generate(state: AgentState) -> str:
-    """Route based on mode and confidence."""
-    if state["mode"] == "offline":
-        return "__end__"
-    if state.get("needs_web_search"):
-        return "web_search"
-    return "__end__"
-
+    return web_search_and_generate

@@ -33,7 +33,9 @@ docker compose up agent-online
 ```bash
 python -m venv venv
 source venv/bin/activate
-pip install -e .
+
+# All features (offline + online + eval + dev tools)
+pip install -e ".[all]"
 
 python scripts/refresh_data.py --full
 python scripts/build_vectorstore.py
@@ -325,7 +327,7 @@ TAVILY_API_KEY=your_key         # For online mode
 ## Testing
 
 ```bash
-# Install dev dependencies
+# Install dev dependencies only
 pip install -e ".[dev]"
 
 # Run tests (33 tests)
