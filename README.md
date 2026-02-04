@@ -20,7 +20,7 @@ cd langgraph-helper-agent
 # 3) Build & prepare data
 docker compose run --rm setup
 
-# 4) Run (offline)
+# 4) Run (offline) — default
 docker compose up agent-offline
 
 # 5) Run (online)
@@ -39,6 +39,10 @@ python scripts/refresh_data.py --full
 python scripts/build_vectorstore.py
 
 python -m src.main "How do I add persistence to a LangGraph agent?"
+
+# Online mode (explicit)
+export TAVILY_API_KEY=your_key
+python -m src.main --mode online "What's new in LangGraph?"
 ```
 
 **Key Features:**
