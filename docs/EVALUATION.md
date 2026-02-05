@@ -117,6 +117,7 @@ Edit `evaluation/metrics.py` to change:
 ## Cost & Configuration
 
 See [docs/RAGAS_EVALUATION.md](docs/RAGAS_EVALUATION.md) for:
+
 - Configuring the Gemini model via environment variables
 - Cost estimation
 - Free tier limits and troubleshooting

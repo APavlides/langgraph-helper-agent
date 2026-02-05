@@ -129,27 +129,6 @@ Uses TypedDict state schema with message history:
 - Checking recent updates or community discussions
 - Question not well-covered in official documentation
 
-### Switching Between Modes
-
-**Via environment variable:**
-
-```bash
-export AGENT_MODE=offline  # or 'online'
-python -m src.main "Your question"
-```
-
-**Via CLI flag:**
-
-```bash
-python -m src.main --mode online "Your question"
-```
-
-**Set API keys in .env (required):**
-
-```bash
-TAVILY_API_KEY=your_key
-```
-
 ## Data Freshness Strategy
 
 ### Offline Mode
@@ -272,7 +251,7 @@ docker compose --env-file .env run --rm agent-online --mode offline "Your questi
 ## Example Run
 
 ```bash
-$ python -m src.main "How do I use checkpointers?"
+$ docker compose --env-file .env run --rm agent-offline "How do I use checkpointers?"
 
 ╭──────────────────────────── Answer ────────────────────────────╮
 │ To use checkpointers in LangGraph:                             │
@@ -321,10 +300,11 @@ TAVILY_API_KEY=your_key          # For online mode
 ## Testing
 
 ```bash
-# Install dev dependencies only
-pip install -e ".[dev]"
+# Run tests via Docker (recommended for reproducibility)
+docker compose --env-file .env run --rm dev -c "pytest tests/ -v"
 
-# Run tests (33 tests)
+# Or locally if you have the environment set up
+pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
@@ -369,6 +349,7 @@ LLM-as-judge metrics using Google Gemini for semantic evaluation:
 - **Answer Relevancy** - Answer addresses the question
 
 **Limitations:**
+
 - Free tier rate limits (RPM/RPD) typically insufficient for full 15-question dataset
 - Local models (llama3.2:3b) produce invalid JSON for RAGAS on resource-constrained machines
 - Requires paid Google tier for reliable evaluation
