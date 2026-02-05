@@ -21,8 +21,8 @@ class AgentState(TypedDict):
         retrieved_contexts: List of document chunks retrieved from the
             vector store. These provide the context for answering questions.
 
-        retrieval_score: Average similarity score from FAISS retrieval.
-            Lower scores indicate better matches (L2 distance).
+        retrieval_score: Average cross-encoder reranking score.
+            Higher scores indicate better matches; negative scores are poor.
 
         mode: Current operating mode - either "offline" (uses only local
             vector store) or "online" (can use web search for additional info).

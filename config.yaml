@@ -27,7 +27,7 @@ agent:
   retrieval_k: 5 # Number of documents to retrieve
   chunk_size: 1000
   chunk_overlap: 200
-  confidence_threshold: 0.7 # For online mode web search trigger
+  rerank_threshold: 0.0 # Cross-encoder score threshold to trigger web search
 
 # Data paths
 data:

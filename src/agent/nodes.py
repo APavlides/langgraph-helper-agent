@@ -53,21 +53,25 @@ def create_retrieve_node(retriever):
     return retrieve
 
 
-def route_after_retrieve(state: AgentState) -> str:
-    """Route based on retrieval quality.
+def create_route_after_retrieve(rerank_threshold: float):
+    """Create routing function based on retrieval quality.
 
     Cross-encoder scores: higher = more relevant
-    Typical: > 0.5 = good, 0.2-0.5 = questionable, < 0.2 = poor
+    Typical: > 0.5 = good, 0.2-0.5 = questionable, < 0.0 = poor
     """
-    if state["mode"] == "offline":
+
+    def route_after_retrieve(state: AgentState) -> str:
+        if state["mode"] == "offline":
+            return "generate"
+
+        retrieval_score = state.get("retrieval_score", 0.0)
+
+        if retrieval_score < rerank_threshold:
+            return "web_search_and_generate"
+
         return "generate"
 
-    retrieval_score = state.get("retrieval_score", 0.0)
-
-    if retrieval_score < 0.3:  # Low reranker confidence
-        return "web_search_and_generate"
-
-    return "generate"
+    return route_after_retrieve
 
 
 def create_generate_node(llm: BaseChatModel):

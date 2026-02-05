@@ -2,9 +2,7 @@
 
 **Summary:** A LangGraph-based RAG agent that answers LangGraph and LangChain questions using local documentation (offline) or web search (online).
 
-## Quick Start (Essential Commands)
-
-**Recommended (Docker/Compose for reproducibility):**
+## Quick Start (Docker/Compose Only)
 
 ```bash
 # 1) Install & start Ollama
@@ -17,34 +15,14 @@ ollama serve
 git clone https://github.com/APavlides/langgraph-helper-agent.git
 cd langgraph-helper-agent
 
-# 3) Build & prepare data
-docker compose run --rm setup
+# 3) Build & prepare data (uses .env)
+docker compose --env-file .env run --rm setup
 
 # 4) Run (offline) — default
-docker compose up agent-offline
+docker compose --env-file .env up agent-offline
 
 # 5) Run (online)
-export TAVILY_API_KEY=your_key
-docker compose up agent-online
-```
-
-**Optional (Local Python install):**
-
-```bash
-python -m venv venv
-source venv/bin/activate
-
-# All features (offline + online + eval + dev tools)
-pip install -e ".[all]"
-
-python scripts/refresh_data.py --full
-python scripts/build_vectorstore.py
-
-python -m src.main "How do I add persistence to a LangGraph agent?"
-
-# Online mode (explicit)
-export TAVILY_API_KEY=your_key
-python -m src.main --mode online "What's new in LangGraph?"
+docker compose --env-file .env up agent-online
 ```
 
 **Key Features:**
@@ -135,7 +113,7 @@ Uses TypedDict state schema with message history:
 
 1. Query is embedded and retrieves top docs from FAISS
 2. Cross-encoder reranks results to assess true relevance
-3. If reranker score < 0.0, triggers Tavily web search
+3. If reranker score < 0.0, triggers web search
 4. Combines web results with docs for comprehensive answer
 5. Returns enriched response with current information
 
@@ -166,17 +144,17 @@ python -m src.main "Your question"
 python -m src.main --mode online "Your question"
 ```
 
-**For online mode, set API key:**
+**Set API keys in .env (required):**
 
 ```bash
-export TAVILY_API_KEY=your_key
+TAVILY_API_KEY=your_key
 ```
 
 ## Data Freshness Strategy
 
 ### Offline Mode
 
-**Data preparation:**
+**Data preparation (Docker):**
 
 1. Downloaded official llms.txt files from LangChain/LangGraph docs
 2. Split into chunks (1000 chars, 200 overlap) using RecursiveCharacterTextSplitter
@@ -187,15 +165,7 @@ export TAVILY_API_KEY=your_key
 **Updating data:**
 
 ```bash
-# Download latest docs
-python scripts/refresh_data.py --full
-
-# Rebuild vector store (~2 minutes)
-python scripts/build_vectorstore.py
-
-# Commit updated index
-git add data/vectorstore/
-git commit -m "chore: update documentation"
+docker compose --env-file .env run --rm setup
 ```
 
 **Frequency recommendation:** Weekly or when major LangGraph releases occur
@@ -223,7 +193,7 @@ If adding additional data (e.g., company docs):
 - Clean, structured results
 - Free tier sufficient for development/testing
 
-## Setup Instructions
+## Setup Instructions (Docker/Compose)
 
 ### 1. Install Ollama
 
@@ -241,7 +211,7 @@ ollama pull nomic-embed-text  # Embeddings (273MB)
 ollama pull llama3.2:3b       # Chat model (2GB)
 ```
 
-**Note:** The cross-encoder reranking model (`ms-marco-MiniLM-L-6-v2`, ~90MB) downloads automatically on first use. You'll see loading progress in stderr - this is normal.
+**Note:** The cross-encoder reranking model (`ms-marco-MiniLM-L-6-v2`, ~90MB) downloads automatically on first use inside the container.
 
 ### 3. Start Ollama Server
 
@@ -249,45 +219,34 @@ ollama pull llama3.2:3b       # Chat model (2GB)
 ollama serve  # Starts on http://localhost:11434
 ```
 
-### 4. Clone and Install Project
+### 4. Clone and Configure
 
 ```bash
 git clone https://github.com/APavlides/langgraph-helper-agent.git
 cd langgraph-helper-agent
 
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-pip install -e .
+# Fill in .env (API keys, mode)
+cp .env.example .env
 ```
 
 ### 5. Build Vector Store (First Time Only)
 
 ```bash
-# Download official docs
-python scripts/refresh_data.py --full
-
-# Build FAISS index (~2 minutes)
-python scripts/build_vectorstore.py
+docker compose --env-file .env run --rm setup
 ```
 
 ### 6. Run Agent
 
-**Offline mode (no API key needed):**
+**Offline mode (default):**
 
 ```bash
-# Interactive chat
-python -m src.main --interactive
-
-# Single question
-python -m src.main "How do I add persistence to a LangGraph agent?"
+docker compose --env-file .env up agent-offline
 ```
 
-**Online mode (requires TAVILY_API_KEY):**
+**Online mode:**
 
 ```bash
-export TAVILY_API_KEY=your_key
-python -m src.main --mode online "What's new in LangGraph 0.2?"
+docker compose --env-file .env up agent-online
 ```
 
 ## Example Run
@@ -316,16 +275,25 @@ $ python -m src.main "How do I use checkpointers?"
 📊 Confidence: 0.92 | 📚 Sources: 3 docs | ⚡ Mode: offline
 ```
 
+## Example Questions (Expected Coverage)
+
+- How do I add persistence to a LangGraph agent?
+- What's the difference between StateGraph and MessageGraph?
+- Show me how to implement human-in-the-loop with LangGraph
+- How do I handle errors and retries in LangGraph nodes?
+- What are best practices for state management in LangGraph?
+
 ## Configuration
 
 **Environment Variables:**
 
 ```bash
-LLM_MODEL=llama3.2:3b           # Chat model
+LLM_MODEL=llama3.2:3b            # Chat model
 EMBEDDING_MODEL=nomic-embed-text # Embeddings
 OLLAMA_BASE_URL=http://localhost:11434
-AGENT_MODE=offline              # or 'online'
-TAVILY_API_KEY=your_key         # For online mode
+AGENT_MODE=offline               # or 'online'
+RERANK_THRESHOLD=0.0             # Trigger web search when score < threshold
+TAVILY_API_KEY=your_key          # For online mode
 ```
 
 **Config file:** `config.yaml` for advanced settings (see [docs/CONFIGURATION.md](docs/CONFIGURATION.md))

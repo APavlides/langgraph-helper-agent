@@ -27,6 +27,7 @@ class EvaluationResult:
     mode: str = "offline"
     latency_ms: float | None = None
     error: str | None = None
+    reference_answer: str | None = None
 
 
 def calculate_topic_coverage(

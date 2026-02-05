@@ -7,8 +7,8 @@ from langgraph.graph import END, START, StateGraph
 from src.agent.nodes import (
     create_generate_node,
     create_retrieve_node,
+    create_route_after_retrieve,
     create_web_search_and_generate_node,
-    route_after_retrieve,
 )
 from src.agent.state import AgentState
 from src.config import AgentMode, Settings
@@ -57,9 +57,7 @@ def create_search_tool(settings: Settings):
             max_results=settings.max_web_results,
         )
 
-    from langchain_community.tools import DuckDuckGoSearchResults
-
-    return DuckDuckGoSearchResults(max_results=settings.max_web_results)
+    return None
 
 
 def create_agent(settings: Settings):
@@ -86,7 +84,7 @@ def create_agent(settings: Settings):
         # Route after retrieve based on retrieval quality
         graph.add_conditional_edges(
             "retrieve",
-            route_after_retrieve,
+            create_route_after_retrieve(settings.rerank_threshold),
             {
                 "generate": "generate",
                 "web_search_and_generate": "web_search_and_generate",

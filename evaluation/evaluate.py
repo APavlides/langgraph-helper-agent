@@ -11,8 +11,7 @@ from typing import Any
 # Ragas imports
 try:
     from datasets import Dataset
-    from langchain_google_genai import (ChatGoogleGenerativeAI,
-                                        GoogleGenerativeAIEmbeddings)
+    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
     from ragas import evaluate as ragas_evaluate
     from ragas.metrics import answer_relevancy, context_precision, faithfulness
     RAGAS_AVAILABLE = True
@@ -112,6 +111,7 @@ def evaluate_single_question(
             contexts=contexts,
             mode=mode.value,
             latency_ms=latency_ms,
+            reference_answer=question_data.get("reference_answer"),
         )
         
         # Calculate custom metrics
@@ -168,28 +168,33 @@ def run_ragas_evaluation(results: list[EvaluationResult]) -> list[EvaluationResu
     google_api_key = os.getenv("GOOGLE_API_KEY")
     if not google_api_key:
         print("Warning: GOOGLE_API_KEY not found. Skipping Ragas evaluation.")
-        print("Set GOOGLE_API_KEY environment variable to enable Ragas metrics.")
+        print("Get a free API key from: https://aistudio.google.com/app/apikey")
         return results
     
     try:
-        # Setup Google Gemini for RAGAS evaluation
+        # Setup Google Gemini for RAGAS evaluation (free tier available)
+        # Get your free API key: https://aistudio.google.com/app/apikey
+        # Free tier limits: 15 RPM, 1500 RPD for generation, 1500 RPD for embeddings
+        gemini_model = os.getenv("GOOGLE_GEMINI_MODEL", "gemini-2.5-flash")
+        
         gemini_llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model=gemini_model,
             google_api_key=google_api_key,
             temperature=0.1,
         )
         gemini_embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-001",
+            model="models/text-embedding-004",
             google_api_key=google_api_key,
         )
         
-        print("Using Google Gemini (gemini-1.5-flash) for RAGAS evaluation...")
+        print(f"Using Google Gemini ({gemini_model}) for RAGAS evaluation...")
         
-        # Prepare dataset for Ragas
+        # Prepare dataset for Ragas (include reference answers)
         data = {
             "question": [r.question for r in valid_results],
             "answer": [r.answer for r in valid_results],
             "contexts": [r.contexts for r in valid_results],
+            "ground_truth": [r.reference_answer or r.question for r in valid_results],
         }
         dataset = Dataset.from_dict(data)
         
@@ -209,9 +214,23 @@ def run_ragas_evaluation(results: list[EvaluationResult]) -> list[EvaluationResu
                 result.faithfulness = float(ragas_results["faithfulness"][i])
             if "answer_relevancy" in ragas_results:
                 result.answer_relevancy = float(ragas_results["answer_relevancy"][i])
+        
+        print("✓ Ragas evaluation completed successfully")
                 
     except Exception as e:
-        print(f"Ragas evaluation failed: {e}")
+        error_msg = str(e)
+        if "RESOURCE_EXHAUSTED" in error_msg or "429" in error_msg or "quota" in error_msg.lower():
+            print(f"⚠ Ragas evaluation skipped: Google API quota exhausted")
+            print(f"  Free tier limits: 15 RPM, 1500 RPD")
+            print(f"  Quota resets daily. Try again tomorrow or upgrade at:")
+            print(f"  https://ai.google.dev/pricing")
+        elif "404" in error_msg or "NOT_FOUND" in error_msg:
+            print(f"⚠ Ragas evaluation skipped: Model '{gemini_model}' not available")
+            print(f"  Available models: gemini-2.5-flash, gemini-2.5-flash-lite, gemini-3-flash")
+            print(f"  Set via: export GOOGLE_GEMINI_MODEL=gemini-2.5-flash")
+        else:
+            print(f"⚠ Ragas evaluation failed: {e}")
+            print(f"  Evaluation will continue with custom metrics only.")
     
     return results
 
@@ -338,6 +357,11 @@ def main():
         action="store_true",
         help="Show detailed output for each question",
     )
+    parser.add_argument(
+        "--ragas",
+        action="store_true",
+        help="Enable Ragas metrics (requires GOOGLE_API_KEY; may be slow)",
+    )
     
     args = parser.parse_args()
     
@@ -345,6 +369,13 @@ def main():
     if args.output is None:
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         args.output = f"evaluation/reports/report-{args.mode}-{timestamp}.json"
+    
+    # RAGAS is disabled by default for reproducibility (Docker)
+    # RAGAS requires Google Gemini API and may timeout with network issues
+    # To enable RAGAS: Set GOOGLE_API_KEY and use --ragas flag
+    # To check available models: python scripts/check_google_models.py
+    if not args.ragas:
+        args.skip_ragas = True
     
     # Load dataset
     print(f"Loading dataset from {args.dataset}...")

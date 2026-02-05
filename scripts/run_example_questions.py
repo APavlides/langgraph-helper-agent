@@ -3,34 +3,45 @@
 import json
 import os
 import sys
-from io import StringIO
 from pathlib import Path
+
+from langchain_core.messages import HumanMessage
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.main import run_agent
+from src.agent.graph import create_agent
+from src.config import AgentMode, Settings
 
 
 def run_questions(questions, outfile: Path, mode: str | None = None) -> None:
     """Run questions in the same process to reuse loaded models."""
+    agent_mode = mode or "offline"
+    settings = Settings(mode=AgentMode(agent_mode))
+    agent = create_agent(settings)
+
     with outfile.open("w", encoding="utf-8") as f:
         for q in questions:
             f.write(f"\n=== {q['id']} ===\nQ: {q['question']}\n\n")
-            
-            # Capture stdout
-            old_stdout = sys.stdout
-            sys.stdout = captured_output = StringIO()
-            
+
             try:
-                # Run in same process to reuse models
-                run_agent(q["question"], mode=mode or "offline")
+                result = agent.invoke(
+                    {
+                        "messages": [HumanMessage(content=q["question"])],
+                        "retrieved_contexts": [],
+                        "mode": agent_mode,
+                        "retrieval_score": None,
+                        "web_search_results": None,
+                    }
+                )
+                if result.get("messages"):
+                    response = result["messages"][-1].content
+                    f.write(response + "\n")
+                else:
+                    f.write("No response returned.\n")
             except Exception as e:
-                print(f"Error: {e}")
-            finally:
-                sys.stdout = old_stdout
-                
-            f.write(captured_output.getvalue())
+                f.write(f"Error: {e}\n")
+
             f.flush()  # Ensure output is written immediately
 
 

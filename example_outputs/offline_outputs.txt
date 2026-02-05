@@ -2,3 +2,238 @@
 === persist-001 ===
 Q: How do I add persistence to a LangGraph agent?
 
+To add persistence to a LangGraph agent, you can use LangGraph's persistence features. This involves storing message history in a storage backend such as SQLite, Postgres, or Azure Cosmos DB, and then fetching previous messages from state when routing to an agent.
+
+Here are the steps:
+
+1. Implement memory in LangGraph for AI applications by following the guide provided.
+2. Extend `AgentState` to add additional fields using custom state schemas.
+3. Pass the custom state schema to `create_agent` using the `state_schema` parameter.
+4. Use persistence to store message history when routing to an agent.
+
+By following these steps, you can leverage LangGraph's persistence features to add enhanced memory capabilities to your LangGraph agents.
+
+=== concepts-001 ===
+Q: What's the difference between StateGraph and MessageGraph?
+
+Unfortunately, the provided context does not mention "StateGraph" or "MessageGraph". It only discusses LangChain, LangGraph, and DeepAgents. 
+
+However, based on general knowledge about these concepts:
+
+- LangGraph is an agent runtime that allows you to define a graph of agents and their interactions.
+- DeepAgents is an open-source framework for building conversational AI models.
+
+Without more context or information about "StateGraph" and "MessageGraph", it's difficult to provide a specific answer.
+
+=== hitl-001 ===
+Q: Show me how to implement human-in-the-loop with LangGraph
+
+To implement human-in-the-loop (HIL) with LangGraph, you can follow these steps:
+
+1. **Use the `interrupt()` function**: This function pauses execution of the graph for human input. You can use it to pause the graph at a specific point and wait for user feedback.
+
+   ```python
+import langgraph
+
+# Create a new graph
+graph = langgraph.Graph()
+
+# Add nodes and edges to the graph
+graph.add_node("node1")
+graph.add_edge("node1", "node2")
+
+# Use interrupt() to pause execution for human input
+langgraph.interrupt()
+```
+
+   In this example, the `interrupt()` function is used to pause the graph at a specific point. The user can then provide feedback by running the graph again.
+
+2. **Create a wrapper to add HIL capabilities**: You can create a wrapper around your tool to add HIL capabilities. This wrapper can use the `interrupt()` function to pause execution for human input.
+
+   ```python
+import langgraph
+
+class HumanInTheLoopWrapper:
+    def __init__(self, tool):
+        self.tool = tool
+
+    def run(self):
+        # Run the tool
+        result = self.tool.run()
+
+        # Use interrupt() to pause execution for human input
+        langgraph.interrupt()
+```
+
+   In this example, a wrapper class is created around your tool. The `run()` method of the wrapper uses the `interrupt()` function to pause execution for human input.
+
+3. **Integrate with existing workflows**: You can integrate HIL capabilities with existing workflows by using the `interrupt()` function to pause execution at specific points.
+
+   ```python
+import langgraph
+
+# Create a new graph
+graph = langgraph.Graph()
+
+# Add nodes and edges to the graph
+graph.add_node("node1")
+graph.add_edge("node1", "node2")
+
+# Use interrupt() to pause execution for human input
+langgraph.interrupt()
+```
+
+   In this example, the `interrupt()` function is used to pause the graph at a specific point. The user can then provide feedback by running the graph again.
+
+4. **Resuming execution**: After pausing execution with `interrupt()`, you can resume execution using the `resume()` function.
+
+   ```python
+import langgraph
+
+# Create a new graph
+graph = langgraph.Graph()
+
+# Add nodes and edges to the graph
+graph.add_node("node1")
+graph.add_edge("node1", "node2")
+
+# Use interrupt() to pause execution for human input
+langgraph.interrupt()
+
+# Resume execution with user feedback
+result = langgraph.resume()
+```
+
+   In this example, the `resume()` function is used to resume execution after pausing with `interrupt()`. The result of the resumed execution is stored in the `result` variable.
+
+By following these steps, you can implement human-in-the-loop capabilities with LangGraph.
+
+=== errors-001 ===
+Q: How do I handle errors and retries in LangGraph nodes?
+
+To handle errors and retries in LangGraph nodes, you can use one of two approaches:
+
+1. Write regular Python code within your node to catch and handle exceptions.
+2. Set a **retry_policy** to direct the graph to retry nodes that raise certain types of exceptions.
+
+Additionally, you can control the maximum number of concurrent tasks by setting `max_concurrency` in the configuration when invoking the graph.
+
+It's also worth noting that LangGraph executes nodes within supersteps, which means that if any branch raises an exception, none of the updates are applied to the state (the entire superstep errors). However, results from successful nodes within a superstep are saved and don't repeat when resumed.
+
+=== state-001 ===
+Q: What are best practices for state management in LangGraph?
+
+Best practices for state management in LangGraph include:
+
+1. Using a `TypedDict`, Pydantic model, or dataclass to define the state.
+2. Defining and updating the state using reducers to control how state updates are processed.
+3. Using human-in-the-loop controls to verify information before it is stored in the state.
+4. Creating threads with an arbitrary pre-defined state by providing a list of supersteps into the create method.
+5. Migrating conversations from another system, setting up test scenarios with specific initial states, and resuming conversations from a previous session.
+
+Additionally, LangGraph persistence documentation provides more information on checkpoints and state management.
+
+=== tools-001 ===
+Q: How do I add tools to a LangGraph agent?
+
+To add tools to a LangGraph agent, follow these steps:
+
+1. In the agent editor, scroll to the **Tools** section.
+2. Click **+ Add tool**.
+3. Search for "Slack" and add the tools you need:
+   * **slack_send_channel_message** - Post messages to a channel
+   * **slack_reply_to_message** - Reply in a thread
+   * **slack_write_private_message** - Send direct messages
+   * **slack_read_channel_history** - Read recent messages
+   * **slack_read_thread_messages** - Read thread replies
+
+Alternatively, you can also ask your agent to add these tools itself by typing "Add the Slack tools so you can respond to messages" in the agent chat.
+
+=== stream-001 ===
+Q: How can I stream responses from a LangGraph agent?
+
+To stream responses from a LangGraph agent, you can use the `stream()` method with `stream_mode="messages"`. This will emit response tokens as they're generated, enabling the TTS stage to begin synthesis immediately.
+
+=== subgraph-001 ===
+Q: How do I create and use subgraphs in LangGraph?
+
+To create and use subgraphs in LangGraph, you need to define how the parent graph and the subgraph communicate. There are two ways to do this:
+
+1. **Shared state schemas**: When adding a subgraph as a node in the parent graph, both the parent and subgraph have shared state keys in their state schemas.
+2. **Different state schemas**: When adding a subgraph as a node in the parent graph, there are no shared state keys between the parent and subgraph schemas.
+
+To set up LangGraph for development, you can install it using pip: `pip install -U langgraph`. Additionally, sign up for [LangSmith](https://smith.langchain.com) to quickly spot issues and improve the performance of your LangGraph projects.
+
+=== memory-001 ===
+Q: What's the difference between short-term and long-term memory in LangGraph?
+
+According to the provided context, the main differences between short-term and long-term memory in LangGraph are:
+
+1. Scope:
+   - Short-term memory is **thread-scoped**, meaning it is limited to a specific conversation or session.
+   - Long-term memory is saved within custom "namespaces" and can be shared across conversational threads.
+
+2. Persistence:
+   - Short-term memory is persisted via thread-scoped checkpoints as part of the agent's state.
+   - Long-term memory uses stores (as provided by LangGraph) to save and recall user-specific or application-level data across sessions.
+
+3. Accessibility:
+   - Short-term memory can only be accessed within a single conversation or session.
+   - Long-term memory can be recalled at any time and in any thread, as it is not limited to a specific conversation or session.
+
+=== conditional-001 ===
+Q: How do I add conditional edges in LangGraph?
+
+You can add conditional edges in LangGraph by using the `add_conditional_edges` method and passing a function that returns a list of `Send` objects or a `Command` object. The function should take the current state as an argument and return a list of nodes to route to, along with any additional data to pass to those nodes.
+
+For example:
+```python
+def continue_to_jokes(state: OverallState):
+    return [Send("generate_joke", {"subject": s}) for s in state['subjects']]
+
+graph.add_conditional_edges("node_a", continue_to_jokes)
+```
+This will add a conditional edge from node "node_a" that routes to the nodes generated by the `continue_to_jokes` function, passing the subject as additional data.
+
+Alternatively, you can use a `Command` object to combine control flow and state updates:
+```python
+graph.add_conditional_edges(START, routing_function, {True: "node_b", False: "node_c"})
+```
+This will add a conditional edge from the start node that routes to either node B or node C based on the condition specified in the `routing_function`.
+
+=== parallel-001 ===
+Q: Can LangGraph run nodes in parallel? How?
+
+Yes, LangGraph can run nodes in parallel through fan-out and fan-in mechanisms, utilizing both standard edges and conditional_edges. This is achieved by having a node with multiple outgoing edges, which will execute all destination nodes in parallel as part of the next superstep. Additionally, tasks can be executed in parallel by invoking them concurrently and waiting for the results, making it useful for improving performance in IO-bound tasks such as calling APIs for LLMs.
+
+=== deploy-001 ===
+Q: How do I deploy a LangGraph agent to production?
+
+To deploy a LangGraph agent to production, follow these steps:
+
+1. Create a repository on GitHub.
+2. Sign up for a LangSmith account (free or Plus plan).
+3. Choose the deployment option that suits your needs (Developer, Plus, or Enterprise).
+
+Note: The exact steps may vary depending on the chosen deployment option and plan.
+
+=== debug-001 ===
+Q: How can I debug a LangGraph agent?
+
+According to the context provided, you can debug a LangGraph agent by using LangSmith, which is a specialized agent IDE that enables visualization, interaction, and debugging of agentic systems. LangSmith integrates with tracing, evaluation, and prompt engineering, allowing you to capture, debug, evaluate, and monitor LLM application behavior.
+
+=== react-001 ===
+Q: How do I build a ReAct agent with LangGraph?
+
+Unfortunately, the provided context does not contain information on how to build a React agent with LangGraph. The context appears to be related to building agents with LangChain and LangGraph, but it does not provide specific guidance on integrating LangGraph with React.
+
+However, based on general knowledge of LangGraph and its integration with other frameworks, it is possible that you would need to use the LangGraph API to create a new agent instance, define nodes and transitions for your agent, and then connect these nodes together using a shared state. You may also need to use React components to render the UI for your agent.
+
+If you are looking for more specific guidance on building a ReAct agent with LangGraph, I would recommend checking out the official LangGraph documentation or seeking out additional resources from the LangChain community.
+
+=== prebuilt-001 ===
+Q: What prebuilt components does LangGraph provide?
+
+According to the provided context, LangGraph provides prebuilt components that are crucial when building agent-based applications, including memory integration and human-in-the-loop control. However, the specific prebuilt components are not explicitly listed in the given text.
+
+To answer this question accurately, I would recommend referring to the [LangGraph Runtime Overview](https://langchain-ai.github.io/langgraph/concepts/pregel/) documentation, which provides a comprehensive overview of the LangGraph runtime and its Pregel execution model. This documentation likely includes information on the prebuilt components provided by LangGraph.

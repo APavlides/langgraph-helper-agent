@@ -13,6 +13,8 @@ services:
       target: runtime
     volumes:
       - ./data:/app/data
+    env_file:
+      - .env
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     entrypoint: /bin/bash
@@ -36,6 +38,8 @@ services:
       target: runtime
     volumes:
       - ./data:/app/data:ro
+    env_file:
+      - .env
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - AGENT_MODE=offline
@@ -50,6 +54,8 @@ services:
       target: runtime
     volumes:
       - ./data:/app/data:ro
+    env_file:
+      - .env
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
@@ -66,6 +72,8 @@ services:
     volumes:
       - ./data:/app/data:ro
       - ./evaluation:/app/evaluation
+    env_file:
+      - .env
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
@@ -80,6 +88,8 @@ services:
       target: runtime
     volumes:
       - .:/app
+    env_file:
+      - .env
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
