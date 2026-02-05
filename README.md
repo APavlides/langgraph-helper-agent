@@ -18,11 +18,11 @@ cd langgraph-helper-agent
 # 3) Build & prepare data (uses .env)
 docker compose --env-file .env run --rm setup
 
-# 4) Run (offline) — default
-docker compose --env-file .env up agent-offline
+# 4) Run agent (interactive chat - offline mode)
+docker compose --env-file .env run --rm agent-offline
 
-# 5) Run (online)
-docker compose --env-file .env up agent-online
+# 5) Run agent (online mode with web search)
+docker compose --env-file .env run --rm agent-online
 ```
 
 **Key Features:**
@@ -237,17 +237,25 @@ docker compose --env-file .env run --rm setup
 
 ### 6. Run Agent
 
-**Offline mode (default):**
+**Interactive chat (offline mode):**
 
 ```bash
-docker compose --env-file .env up agent-offline
+docker compose --env-file .env run --rm agent-offline
 ```
 
-**Online mode:**
+**Ask a single question:**
 
 ```bash
-docker compose --env-file .env up agent-online
+docker compose --env-file .env run --rm agent-offline "How do I use checkpointers?"
 ```
+
+**Online mode (with web search):**
+
+```bash
+docker compose --env-file .env run --rm agent-online
+```
+
+**Exit interactive mode:** Type `exit`, `quit`, or press Ctrl+C
 
 ## Runtime Mode Override
 
@@ -331,11 +339,47 @@ docker run --rm langgraph-helper-agent "Your question"
 
 See [docs/DOCKER.md](docs/DOCKER.md) for full containerization guide.
 
-## Evaluation (RAGAS)
+## Evaluation
 
-RAGAS evaluation uses Google Gemini and can exceed the free-tier request limits before completing the full dataset. Expect incomplete RAGAS metrics on the free tier unless you reduce dataset size or increase limits.
+The project includes two types of evaluation:
 
-See [docs/RAGAS_EVALUATION.md](docs/RAGAS_EVALUATION.md) for setup and limits.
+### 1. Custom Metrics (Default - No API Required)
+
+Rule-based metrics that work offline without any LLM:
+
+- **Topic Coverage** - Keyword/phrase matching against expected topics
+- **Code Presence** - Regex detection of code blocks and inline code
+- **Code Validity** - Python AST syntax validation (no execution)
+- **Aggregate Score** - Weighted average of all metrics
+
+**Run evaluation:**
+
+```bash
+docker compose --env-file .env run --rm -e OLLAMA_BASE_URL=http://host.docker.internal:11434 dev -c "python -m evaluation.evaluate"
+```
+
+**Output:** JSON report with scores (0-1.0) for each metric per question.
+
+### 2. RAGAS Metrics (Optional - Requires Google API)
+
+LLM-as-judge metrics using Google Gemini for semantic evaluation:
+
+- **Context Precision** - Quality of retrieved documents
+- **Faithfulness** - Answer grounded in context (no hallucinations)
+- **Answer Relevancy** - Answer addresses the question
+
+**Limitations:**
+- Free tier rate limits (RPM/RPD) typically insufficient for full 15-question dataset
+- Local models (llama3.2:3b) produce invalid JSON for RAGAS on resource-constrained machines
+- Requires paid Google tier for reliable evaluation
+
+**Run with RAGAS:**
+
+```bash
+docker compose --env-file .env run --rm -e OLLAMA_BASE_URL=http://host.docker.internal:11434 dev -c "python -m evaluation.evaluate --ragas"
+```
+
+See [docs/EVALUATION.md](docs/EVALUATION.md) and [docs/RAGAS_EVALUATION.md](docs/RAGAS_EVALUATION.md) for details.
 
 ## Troubleshooting
 
