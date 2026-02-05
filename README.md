@@ -160,7 +160,9 @@ cp .env.example .env
 
 **Important `.env` settings:**
 
-- `OLLAMA_BASE_URL` - Set to `http://host.docker.internal:11434` (macOS/Windows) or `http://localhost:11434` (Linux)
+- `OLLAMA_BASE_URL` - Network address for Docker containers to reach Ollama service
+  - **macOS/Windows**: `http://host.docker.internal:11434`
+  - **Linux**: `http://localhost:11434`
 - `TAVILY_API_KEY` - Only needed for online mode (optional)
 - `GOOGLE_API_KEY` - Only needed for RAGAS evaluation (optional)
 - `AGENT_MODE` - Set to `offline` (default) or `online`
