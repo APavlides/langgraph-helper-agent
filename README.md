@@ -32,57 +32,7 @@ docker compose --env-file .env run --rm agent-online
 - RAG with FAISS vector store
 - LangGraph state machine for routing and decision-making
 
-## Architecture Overview
-
-### Graph Design
-
-Built with **LangGraph** (≥ 0.2.0) as a state machine with the following nodes:
-
-1. **retrieve** - Fetches relevant docs from FAISS vector store, reranks with cross-encoder for quality assessment
-2. **generate** - Creates answer using ChatOllama (llama3.2:3b)
-3. **web_search_and_generate** - Searches web via Tavily API + generates enhanced answer (online mode)
-4. **route_after_retrieve** - Decides whether to use docs or web search based on reranker scores
-
-**Routing Logic:**
-
-```
-Query → Retrieve + Rerank → Route
-                           ├─> [reranker score < 0.0 & online mode] → Web Search + Generate → END
-                           └─> [else] → Generate → END
-```
-
-**Reranking:** Uses `cross-encoder/ms-marco-MiniLM-L-6-v2` to assess retrieval quality. Scores < 0.0 indicate poor relevance, triggering web search in online mode.
-
-### State Management
-
-Uses TypedDict state schema with message history:
-
-- `messages` - Conversation history (HumanMessage, AIMessage)
-- `retrieved_contexts` - Documentation chunks from vector store
-- `retrieval_score` - Cross-encoder reranking score (negative = poor relevance)
-- `mode` - offline or online
-- `web_search_results` - Search results (online mode only)
-
-### Technology Stack
-
-**Required (V1):**
-
-- LangGraph ≥ 0.2.0 - State machine framework
-- LangChain ≥ 0.3.0 - LLM abstractions
-- langchain-ollama ≥ 0.1.0 - Ollama integration
-- sentence-transformers ≥ 2.2.0 - Cross-encoder reranking
-
-**Core Components:**
-
-- **Ollama** - Local LLM (llama3.2:3b) and embeddings (nomic-embed-text)
-- **FAISS** - Vector store with 10,943 chunks from official docs
-- **Cross-encoder** - ms-marco-MiniLM-L-6-v2 for retrieval quality assessment
-- **Python** 3.10+
-
-**Optional:**
-
-- Tavily API - Web search (online mode)
-- RAGAS + Google Gemini - Evaluation metrics
+> **For detailed architecture information**, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ## Operating Modes
 
@@ -379,6 +329,7 @@ export LLM_MODEL=llama3.2:1b  # Smaller model
 
 ## Additional Documentation
 
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design, graph routing, and technology stack
 - [docs/CONFIGURATION.md](docs/CONFIGURATION.md) - Advanced configuration options
 - [docs/DOCKER.md](docs/DOCKER.md) - Docker deployment guide
 - [docs/EVALUATION.md](docs/EVALUATION.md) - RAGAS evaluation setup
