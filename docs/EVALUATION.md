@@ -29,7 +29,7 @@ RAGAS uses Google Gemini as an LLM judge to evaluate answers:
 
 **Note:** This is ONLY for evaluation metrics, not for agent queries (which use Ollama).
 
-**Free Tier:** 1500 requests/day (plenty for evaluation runs)
+**Free Tier:** Limited RPM/RPD and may not complete the full dataset. Use paid tier or reduce dataset size/metrics for reliable full runs.
 
 ## Running Evaluation
 
@@ -155,16 +155,10 @@ Edit `evaluation/metrics.py` to change:
 
 ### Change LLM Judge
 
-By default, RAGAS uses `gemini-1.5-flash`. To change:
+By default, RAGAS uses `gemini-2.5-flash`. To change, set an environment variable:
 
-Edit `evaluation/evaluate.py`:
-
-```python
-gemini_llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-pro",  # More capable but slower
-    google_api_key=google_api_key,
-    temperature=0.1,
-)
+```bash
+export GOOGLE_GEMINI_MODEL=gemini-2.5-flash-lite
 ```
 
 ## Cost Estimation
@@ -178,10 +172,9 @@ gemini_llm = ChatGoogleGenerativeAI(
 
 **Google Gemini (RAGAS metrics):**
 
-- Cost: $0 (free tier)
+- Cost: $0 (free tier) or paid (recommended for full runs)
 - Requests: ~45 (3 metrics × 15 questions)
-- Daily limit: 1500 requests
-- **Runs per day:** ~33 evaluations
+- Free tier RPM/RPD may cause timeouts or incomplete runs
 
 ### Monthly Usage
 

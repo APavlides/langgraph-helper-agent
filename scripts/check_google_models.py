@@ -8,8 +8,8 @@ import sys
 def check_models():
     """List available Google Generative AI models."""
     try:
-        from langchain_google_genai import GoogleGenerativeAI
         from google.generativeai import list_models
+        from langchain_google_genai import GoogleGenerativeAI
     except ImportError:
         print("Error: langchain-google-genai not installed")
         print("Install with: pip install langchain-google-genai")
@@ -22,11 +22,12 @@ def check_models():
 
     try:
         import google.generativeai as genai
+
         genai.configure(api_key=api_key)
-        
+
         print("Available Google Generative AI models:")
         print("-" * 60)
-        
+
         for model in list_models():
             print(f"Model: {model.name}")
             print(f"  Display Name: {model.display_name}")
@@ -34,7 +35,7 @@ def check_models():
             print(f"  Input token limit: {model.input_token_limit}")
             print(f"  Output token limit: {model.output_token_limit}")
             print()
-            
+
     except Exception as e:
         print(f"Error listing models: {e}")
         print("\nTroubleshooting:")

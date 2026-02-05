@@ -319,6 +319,12 @@ docker run --rm langgraph-helper-agent "Your question"
 
 See [docs/DOCKER.md](docs/DOCKER.md) for full containerization guide.
 
+## Evaluation (RAGAS)
+
+RAGAS evaluation uses Google Gemini and can exceed the free-tier request limits before completing the full dataset. Expect incomplete RAGAS metrics on the free tier unless you reduce dataset size or increase limits.
+
+See [docs/RAGAS_EVALUATION.md](docs/RAGAS_EVALUATION.md) for setup and limits.
+
 ## Troubleshooting
 
 **Ollama connection refused:**
@@ -339,6 +345,7 @@ export LLM_MODEL=llama3.2:1b  # Smaller model
 - [docs/CONFIGURATION.md](docs/CONFIGURATION.md) - Advanced configuration options
 - [docs/DOCKER.md](docs/DOCKER.md) - Docker deployment guide
 - [docs/EVALUATION.md](docs/EVALUATION.md) - RAGAS evaluation setup
+- [docs/RAGAS_EVALUATION.md](docs/RAGAS_EVALUATION.md) - Google Gemini free tier limits and troubleshooting
 
 ## License
 
