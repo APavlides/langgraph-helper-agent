@@ -19,10 +19,10 @@ cd langgraph-helper-agent
 docker compose --env-file .env run --rm setup
 
 # 4) Run agent (interactive chat - offline mode)
-docker compose --env-file .env run --rm agent-offline
+docker compose --env-file .env run --rm -e OLLAMA_BASE_URL=http://host.docker.internal:11434 agent-offline
 
 # 5) Run agent (online mode with web search)
-docker compose --env-file .env run --rm agent-online
+docker compose --env-file .env run --rm -e OLLAMA_BASE_URL=http://host.docker.internal:11434 agent-online
 ```
 
 **Key Features:**
@@ -154,17 +154,26 @@ ollama serve  # Starts on http://localhost:11434
 git clone https://github.com/APavlides/langgraph-helper-agent.git
 cd langgraph-helper-agent
 
-# Fill in .env (API keys, mode)
+# Create .env from example and configure for your system
 cp .env.example .env
 ```
 
-### 5. Build Vector Store (First Time Only)
+**Important `.env` settings:**
+
+- `OLLAMA_BASE_URL` - Set to `http://host.docker.internal:11434` (macOS/Windows) or `http://localhost:11434` (Linux)
+- `TAVILY_API_KEY` - Only needed for online mode (optional)
+- `GOOGLE_API_KEY` - Only needed for RAGAS evaluation (optional)
+- `AGENT_MODE` - Set to `offline` (default) or `online`
+
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for all available options.
+
+### 3. Build Vector Store (First Time Only)
 
 ```bash
 docker compose --env-file .env run --rm setup
 ```
 
-### 6. Run Agent
+### 4. Run Agent
 
 **Interactive chat (offline mode):**
 
@@ -285,7 +294,7 @@ Rule-based metrics that work offline without any LLM:
 **Run evaluation:**
 
 ```bash
-docker compose --env-file .env run --rm -e OLLAMA_BASE_URL=http://host.docker.internal:11434 dev -c "python -m evaluation.evaluate"
+docker compose --env-file .env run --rm dev -c "python -m evaluation.evaluate"
 ```
 
 **Output:** JSON report with scores (0-1.0) for each metric per question.
@@ -307,7 +316,7 @@ LLM-as-judge metrics using Google Gemini for semantic evaluation:
 **Run with RAGAS:**
 
 ```bash
-docker compose --env-file .env run --rm -e OLLAMA_BASE_URL=http://host.docker.internal:11434 dev -c "python -m evaluation.evaluate --ragas"
+docker compose --env-file .env run --rm dev -c "python -m evaluation.evaluate --ragas"
 ```
 
 See [docs/EVALUATION.md](docs/EVALUATION.md) and [docs/RAGAS_EVALUATION.md](docs/RAGAS_EVALUATION.md) for details.
