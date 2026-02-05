@@ -216,33 +216,6 @@ Docker build can be slow. Check if you need to clean up:
 docker system prune  # Remove unused layers
 ```
 
-## Production Deployment
-
-### Push to Registry
-
-```bash
-docker tag langgraph-helper-agent:latest myregistry/langgraph-helper:1.0.0
-docker push myregistry/langgraph-helper:1.0.0
-```
-
-### Deploy to Cloud
-
-**Hugging Face Spaces (Free):**
-
-```bash
-# Create repo on Spaces, then push
-docker tag langgraph-helper-agent yourusername/langgraph-helper
-docker push yourusername/langgraph-helper
-```
-
-**AWS ECS:**
-
-```bash
-aws ecr create-repository --repository-name langgraph-helper
-docker tag langgraph-helper-agent:latest <account>.dkr.ecr.<region>.amazonaws.com/langgraph-helper:latest
-docker push <account>.dkr.ecr.<region>.amazonaws.com/langgraph-helper:latest
-```
-
 ## Optimization Tips
 
 ### Reduce Image Size
@@ -261,7 +234,6 @@ To reduce further:
 
 ## Next Steps
 
-1. **Test locally** once Docker daemon is available
-2. **Add Ollama service** to docker-compose.yml (optional)
-3. **Deploy** to Hugging Face Spaces or cloud provider
-4. **Add frontend** (Streamlit or FastAPI) as another service
+1. **Test locally** - Verify Docker Compose services work on your machine
+2. **Configure API keys** - Set TAVILY_API_KEY and GOOGLE_API_KEY for online mode and evaluation
+3. **Run evaluation** - See [docs/EVALUATION.md](../docs/EVALUATION.md) for testing the agent's quality

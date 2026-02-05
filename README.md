@@ -249,6 +249,18 @@ docker compose --env-file .env up agent-offline
 docker compose --env-file .env up agent-online
 ```
 
+## Runtime Mode Override
+
+You can override the default mode at runtime even when using Docker Compose services:
+
+```bash
+# Run offline service but switch to online mode
+docker compose --env-file .env run --rm agent-offline --mode online "Your question"
+
+# Run online service but switch to offline mode
+docker compose --env-file .env run --rm agent-online --mode offline "Your question"
+```
+
 ## Example Run
 
 ```bash

@@ -87,45 +87,6 @@ See: `evaluation/dataset.json`
 - `0.7 - 0.8`: Acceptable
 - `< 0.7`: Needs improvement
 
-## CI/CD Evaluation
-
-### Automatic Evaluation
-
-The repository includes GitHub Actions workflow:
-
-**Schedule:** Every Monday at 6 AM UTC
-
-**Manual Trigger:**
-
-1. Go to Actions tab
-2. Select "RAGAS Evaluation"
-3. Click "Run workflow"
-4. Choose mode (offline/online)
-
-### Required Secrets
-
-Add to GitHub repository settings → Secrets:
-
-```
-GOOGLE_API_KEY    - For RAGAS metrics
-TAVILY_API_KEY    - For online mode (optional)
-```
-
-### Workflow Steps
-
-1. **Setup Ollama** - Downloads and starts local LLM
-2. **Install models** - Pulls llama3.2:3b and nomic-embed-text
-3. **Download docs** - Gets latest llms.txt files
-4. **Build vector store** - Creates FAISS index
-5. **Run evaluation** - Tests 15 questions with RAGAS
-6. **Generate report** - Creates JSON report artifact
-
-### Results
-
-- **Artifacts:** Report files stored for 90 days
-- **Summary:** Key metrics displayed in workflow run
-- **Threshold:** Workflow fails if score < 0.7
-
 ## Customizing Evaluation
 
 ### Add Questions
@@ -153,33 +114,12 @@ Edit `evaluation/metrics.py` to change:
 - Topic coverage calculation
 - Code validity checks
 
-### Change LLM Judge
+## Cost & Configuration
 
-By default, RAGAS uses `gemini-2.5-flash`. To change, set an environment variable:
-
-```bash
-export GOOGLE_GEMINI_MODEL=gemini-2.5-flash-lite
-```
-
-## Cost Estimation
-
-### Per Evaluation Run (15 questions)
-
-**Ollama (agent queries):**
-
-- Cost: $0 (free, local)
-- Requests: ~15 queries + embedding lookups
-
-**Google Gemini (RAGAS metrics):**
-
-- Cost: $0 (free tier) or paid (recommended for full runs)
-- Requests: ~45 (3 metrics × 15 questions)
-- Free tier RPM/RPD may cause timeouts or incomplete runs
-
-### Monthly Usage
-
-- Weekly evaluations: 4 runs/month = 180 requests
-- Well within free tier (46,500/month)
+See [docs/RAGAS_EVALUATION.md](docs/RAGAS_EVALUATION.md) for:
+- Configuring the Gemini model via environment variables
+- Cost estimation
+- Free tier limits and troubleshooting
 
 ## Troubleshooting
 

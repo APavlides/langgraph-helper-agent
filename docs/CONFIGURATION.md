@@ -375,15 +375,14 @@ cat .env
 pip list | grep python-dotenv
 ```
 
-## No External Package Needed
+## Implementation Details
 
 This project uses **standard Python packages** for configuration:
 
 - **PyYAML** (`pyyaml`): Parses YAML files
 - **python-dotenv**: Loads `.env` files
 - **dataclasses**: Type-safe settings (built-in Python 3.7+)
-
-**We removed the "unified client" dependency** because it was designed for multi-provider support (Ollama + OpenRouter). Since you only need Ollama, we use the official `langchain-ollama` package directly, which is simpler and more maintainable.
+- **langchain-ollama**: Official Ollama integration
 
 ## Code Flow Diagram
 
