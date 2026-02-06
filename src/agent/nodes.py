@@ -1,6 +1,6 @@
 """Agent node functions."""
 
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from langchain.chat_models.base import BaseChatModel
 from sentence_transformers import CrossEncoder
@@ -26,14 +26,18 @@ def create_retrieve_node(retriever: Any) -> Callable[[AgentState], dict[str, Any
     def retrieve(state: AgentState) -> dict[str, Any]:
         query = state["messages"][-1].content if state["messages"] else ""
         # Get more candidates for reranking
-        docs_with_scores = retriever.vectorstore.similarity_search_with_score(
-            query, k=retriever.search_kwargs.get("k", 5) * 2  # Get 2x for reranking
+        docs_with_scores = cast(
+            list[tuple[Any, float]],
+            retriever.vectorstore.similarity_search_with_score(
+                query, k=retriever.search_kwargs.get("k", 5) * 2  # Get 2x for reranking
+            ),
         )
 
         # Rerank with cross-encoder
         reranker = get_reranker()
         doc_texts: list[str] = [str(doc.page_content) for doc, _ in docs_with_scores]
-        rerank_scores = reranker.predict([(query, text) for text in doc_texts])
+        pair_inputs = [(query, text) for text in doc_texts]
+        rerank_scores = cast(Any, reranker).predict(pair_inputs)
 
         # Sort by rerank scores (higher is better for cross-encoder)
         ranked_docs = sorted(
