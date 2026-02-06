@@ -4,6 +4,7 @@
 
 - [Authenticate](https://docs.langchain.com/api-reference/auth-service-v2/authenticate.md): Get OAuth token or start authentication flow if needed.
 - [Check Oauth Token Exists](https://docs.langchain.com/api-reference/auth-service-v2/check-oauth-token-exists.md): Return whether the current user has any tokens for a given provider (across agents).
+- [Check Workspace Slack Tokens Exist](https://docs.langchain.com/api-reference/auth-service-v2/check-workspace-slack-tokens-exist.md): Check if the workspace has any Slack tokens.
 - [Create Mcp Oauth Provider](https://docs.langchain.com/api-reference/auth-service-v2/create-mcp-oauth-provider.md): Create an OAuth provider via MCP auto-discovery.
 - [Create Oauth Provider](https://docs.langchain.com/api-reference/auth-service-v2/create-oauth-provider.md): Create a new OAuth provider manually.
 - [Delete Oauth Provider](https://docs.langchain.com/api-reference/auth-service-v2/delete-oauth-provider.md): Delete an OAuth provider.
@@ -25,10 +26,20 @@ a success page since no token exchange is needed.
 
 For new installations with code/state, we process similar to the regular
 OAuth callback.
+- [Revoke All Slack Tokens For Workspace](https://docs.langchain.com/api-reference/auth-service-v2/revoke-all-slack-tokens-for-workspace.md): Revoke ALL Slack tokens for the workspace. Admin-only action that disconnects Slack entirely.
+
+This is a destructive operation that:
+- Revokes all Slack tokens on Slack's side for all users in the workspace
+- Deletes all Slack tokens from the database
 - [Update Oauth Provider](https://docs.langchain.com/api-reference/auth-service-v2/update-oauth-provider.md): Update an OAuth provider.
 - [Wait For Auth Completion](https://docs.langchain.com/api-reference/auth-service-v2/wait-for-auth-completion.md): Wait for OAuth authentication completion.
 - [Create Deployment](https://docs.langchain.com/api-reference/deployments-v2/create-deployment.md): Create a new deployment.
 - [Delete Deployment](https://docs.langchain.com/api-reference/deployments-v2/delete-deployment.md): Delete a deployment by ID.
+- [Delete Deployments](https://docs.langchain.com/api-reference/deployments-v2/delete-deployments.md): Delete multiple deployments with partial success support.
+
+Returns:
+    - 200: All deployments deleted successfully
+    - 207: Some deployments deleted successfully, some failed
 - [Get Deployment](https://docs.langchain.com/api-reference/deployments-v2/get-deployment.md): Get a deployment by ID.
 - [Get Revision](https://docs.langchain.com/api-reference/deployments-v2/get-revision.md): Get a revision by ID for a deployment.
 - [List Deployments](https://docs.langchain.com/api-reference/deployments-v2/list-deployments.md): List all deployments.
@@ -107,15 +118,19 @@ This endpoint queries the database for fast performance.
 - [List all Sandbox Pools](https://docs.langchain.com/api-reference/sandboxes-v2/list-all-sandbox-pools.md): List all Sandbox Pools in the tenant's namespace.
 
 This endpoint queries the database for fast performance.
+Supports optional pagination via `limit` and `offset` query parameters.
 - [List all Sandboxes](https://docs.langchain.com/api-reference/sandboxes-v2/list-all-sandboxes.md): List all Sandboxes in the tenant's namespace.
 
 This endpoint queries the database for fast performance.
+Supports optional pagination via `limit` and `offset` query parameters.
 - [List all SandboxTemplates](https://docs.langchain.com/api-reference/sandboxes-v2/list-all-sandboxtemplates.md): List all SandboxTemplates in the tenant's sandbox namespace.
 
 This endpoint queries the database for fast performance.
+Supports optional pagination via `limit` and `offset` query parameters.
 - [List all Volumes](https://docs.langchain.com/api-reference/sandboxes-v2/list-all-volumes.md): List all persistent volumes in the tenant's sandbox namespace.
 
 This endpoint queries the database for fast performance.
+Supports optional pagination via `limit` and `offset` query parameters.
 - [Update a Sandbox](https://docs.langchain.com/api-reference/sandboxes-v2/update-a-sandbox.md): Update a Sandbox's display name.
 
 Currently only the display name can be updated.
@@ -140,6 +155,7 @@ You can update:
 The storage increase is subject to quota limits configured via
 Metronome org config.
 - [null](https://docs.langchain.com/index.md)
+- [Attribute-based access control](https://docs.langchain.com/langsmith/abac.md)
 - [Connect an authentication provider](https://docs.langchain.com/langsmith/add-auth-server.md)
 - [Human-in-the-loop using server API](https://docs.langchain.com/langsmith/add-human-in-the-loop.md)
 - [Add metadata and tags to traces](https://docs.langchain.com/langsmith/add-metadata-tags.md)
@@ -201,6 +217,7 @@ This endpoint also functions as the endpoint to list all assistants.
 - [Create Thread Cron](https://docs.langchain.com/langsmith/agent-server-api/crons-plus-tier/create-thread-cron.md): Create a cron to schedule runs on a thread.
 - [Delete Cron](https://docs.langchain.com/langsmith/agent-server-api/crons-plus-tier/delete-cron.md): Delete a cron by ID.
 - [Search Crons](https://docs.langchain.com/langsmith/agent-server-api/crons-plus-tier/search-crons.md): Search all active crons
+- [Update Cron](https://docs.langchain.com/langsmith/agent-server-api/crons-plus-tier/update-cron.md): Update a cron job by ID.
 - [MCP Get](https://docs.langchain.com/langsmith/agent-server-api/mcp/mcp-get.md): Implemented according to the Streamable HTTP Transport specification.
 - [MCP Post](https://docs.langchain.com/langsmith/agent-server-api/mcp/mcp-post.md): Implemented according to the Streamable HTTP Transport specification.
 Sends a JSON-RPC 2.0 message to the server.
@@ -289,6 +306,7 @@ This endpoint also functions as the endpoint to list all threads.
 - [LangSmith Deployment components](https://docs.langchain.com/langsmith/components.md)
 - [How to create a composite evaluator](https://docs.langchain.com/langsmith/composite-evaluators-sdk.md)
 - [How to create a composite evaluator](https://docs.langchain.com/langsmith/composite-evaluators-ui.md)
+- [Conditional tracing](https://docs.langchain.com/langsmith/conditional-tracing.md)
 - [Use HTTP headers for runtime configuration](https://docs.langchain.com/langsmith/configurable-headers.md)
 - [Include HTTP headers in server logs](https://docs.langchain.com/langsmith/configurable-logs.md)
 - [Manage assistants](https://docs.langchain.com/langsmith/configuration-cloud.md)
@@ -358,6 +376,7 @@ This endpoint also functions as the endpoint to list all threads.
 - [Filter traces](https://docs.langchain.com/langsmith/filter-traces-in-application.md)
 - [Self-hosted LangSmith on GCP](https://docs.langchain.com/langsmith/gcp-self-hosted.md)
 - [How to implement generative user interfaces with LangGraph](https://docs.langchain.com/langsmith/generative-ui-react.md)
+- [Integrations](https://docs.langchain.com/langsmith/get-started-integrations.md)
 - [Granular billable usage](https://docs.langchain.com/langsmith/granular-usage.md): Retrieve detailed trace usage data broken down by workspace, project, user, or API key.
 - [Rebuild graph at runtime](https://docs.langchain.com/langsmith/graph-rebuild.md)
 - [LangSmith docs](https://docs.langchain.com/langsmith/home.md)
@@ -498,30 +517,33 @@ This endpoint also functions as the endpoint to list all threads.
 - [How to define a summary evaluator](https://docs.langchain.com/langsmith/summary.md)
 - [Test a ReAct agent with Pytest/Vitest and LangSmith](https://docs.langchain.com/langsmith/test-react-agent-pytest.md)
 - [Configure threads](https://docs.langchain.com/langsmith/threads.md)
-- [Trace with Anthropic](https://docs.langchain.com/langsmith/trace-anthropic.md)
-- [Trace Claude Agent SDK](https://docs.langchain.com/langsmith/trace-claude-agent-sdk.md)
-- [Trace Claude Code](https://docs.langchain.com/langsmith/trace-claude-code.md)
+- [Trace Anthropic applications](https://docs.langchain.com/langsmith/trace-anthropic.md)
+- [Trace Amazon Bedrock applications](https://docs.langchain.com/langsmith/trace-bedrock.md)
+- [Trace Claude Agent SDK applications](https://docs.langchain.com/langsmith/trace-claude-agent-sdk.md)
+- [Trace Claude Code applications](https://docs.langchain.com/langsmith/trace-claude-code.md)
+- [Trace Deep Agents applications](https://docs.langchain.com/langsmith/trace-deep-agents.md)
 - [Trace generator functions](https://docs.langchain.com/langsmith/trace-generator-functions.md)
-- [Trace with OpenAI](https://docs.langchain.com/langsmith/trace-openai.md)
+- [Trace OpenAI applications](https://docs.langchain.com/langsmith/trace-openai.md)
 - [Trace query syntax](https://docs.langchain.com/langsmith/trace-query-syntax.md)
 - [Trace with API](https://docs.langchain.com/langsmith/trace-with-api.md)
-- [Trace with AutoGen](https://docs.langchain.com/langsmith/trace-with-autogen.md)
-- [Trace with CrewAI](https://docs.langchain.com/langsmith/trace-with-crewai.md)
-- [Trace with Google ADK](https://docs.langchain.com/langsmith/trace-with-google-adk.md)
-- [Trace with Google Gemini](https://docs.langchain.com/langsmith/trace-with-google-gemini.md)
-- [Trace with Instructor](https://docs.langchain.com/langsmith/trace-with-instructor.md)
-- [Trace with LangChain (Python and JS/TS)](https://docs.langchain.com/langsmith/trace-with-langchain.md)
-- [Trace with LangGraph](https://docs.langchain.com/langsmith/trace-with-langgraph.md)
-- [Trace with LiveKit](https://docs.langchain.com/langsmith/trace-with-livekit.md)
-- [Trace with Mastra](https://docs.langchain.com/langsmith/trace-with-mastra.md)
-- [Trace with Microsoft Agent Framework](https://docs.langchain.com/langsmith/trace-with-microsoft-agent-framework.md)
-- [Trace with OpenAI Agents SDK](https://docs.langchain.com/langsmith/trace-with-openai-agents-sdk.md)
+- [Trace AutoGen applications](https://docs.langchain.com/langsmith/trace-with-autogen.md)
+- [Trace CrewAI applications](https://docs.langchain.com/langsmith/trace-with-crewai.md)
+- [Trace Google ADK applications](https://docs.langchain.com/langsmith/trace-with-google-adk.md)
+- [Trace Google Gemini applications](https://docs.langchain.com/langsmith/trace-with-google-gemini.md)
+- [Trace Instructor applications](https://docs.langchain.com/langsmith/trace-with-instructor.md)
+- [Trace LangChain applications (Python and JS/TS)](https://docs.langchain.com/langsmith/trace-with-langchain.md)
+- [Trace LangGraph applications](https://docs.langchain.com/langsmith/trace-with-langgraph.md)
+- [Trace LiveKit applications](https://docs.langchain.com/langsmith/trace-with-livekit.md)
+- [Trace Mastra applications](https://docs.langchain.com/langsmith/trace-with-mastra.md)
+- [Trace Microsoft Agent Framework applications](https://docs.langchain.com/langsmith/trace-with-microsoft-agent-framework.md)
+- [Trace Mistral applications](https://docs.langchain.com/langsmith/trace-with-mistral.md)
+- [Trace OpenAI Agents SDK applications](https://docs.langchain.com/langsmith/trace-with-openai-agents-sdk.md)
 - [Trace with OpenTelemetry](https://docs.langchain.com/langsmith/trace-with-opentelemetry.md)
-- [Trace with Pipecat](https://docs.langchain.com/langsmith/trace-with-pipecat.md)
-- [Trace with PydanticAI](https://docs.langchain.com/langsmith/trace-with-pydantic-ai.md)
-- [Trace with Semantic Kernel](https://docs.langchain.com/langsmith/trace-with-semantic-kernel.md)
+- [Trace Pipecat applications](https://docs.langchain.com/langsmith/trace-with-pipecat.md)
+- [Trace PydanticAI applications](https://docs.langchain.com/langsmith/trace-with-pydantic-ai.md)
+- [Trace Semantic Kernel applications](https://docs.langchain.com/langsmith/trace-with-semantic-kernel.md)
 - [Trace with Temporal](https://docs.langchain.com/langsmith/trace-with-temporal.md): Learn how to trace Temporal workflows and activities in LangSmith using OpenTelemetry.
-- [Trace with the Vercel AI SDK (JS/TS only)](https://docs.langchain.com/langsmith/trace-with-vercel-ai-sdk.md)
+- [Trace Vercel AI SDK applications (JS/TS only)](https://docs.langchain.com/langsmith/trace-with-vercel-ai-sdk.md)
 - [Trace without setting environment variables](https://docs.langchain.com/langsmith/trace-without-env-vars.md)
 - [How to evaluate your agent with trajectory evaluations](https://docs.langchain.com/langsmith/trajectory-evals.md)
 - [Troubleshooting](https://docs.langchain.com/langsmith/troubleshooting.md)
@@ -562,36 +584,36 @@ This endpoint also functions as the endpoint to list all threads.
 - [Quickstart](https://docs.langchain.com/oss/javascript/deepagents/quickstart.md): Build your first deep agent in minutes
 - [Skills](https://docs.langchain.com/oss/javascript/deepagents/skills.md): Learn how to extend your deep agent's capabilities with skills
 - [Subagents](https://docs.langchain.com/oss/javascript/deepagents/subagents.md): Learn how to use subagents to delegate work and keep context clean
-- [Callbacks](https://docs.langchain.com/oss/javascript/integrations/callbacks/index.md)
-- [ChatAnthropic](https://docs.langchain.com/oss/javascript/integrations/chat/anthropic.md)
-- [AzureChatOpenAI](https://docs.langchain.com/oss/javascript/integrations/chat/azure.md)
-- [BedrockChat](https://docs.langchain.com/oss/javascript/integrations/chat/bedrock.md)
-- [ChatGoogleGenerativeAI](https://docs.langchain.com/oss/javascript/integrations/chat/google_generative_ai.md)
-- [Chat models](https://docs.langchain.com/oss/javascript/integrations/chat/index.md)
-- [ChatOpenAI](https://docs.langchain.com/oss/javascript/integrations/chat/openai.md)
-- [null](https://docs.langchain.com/oss/javascript/integrations/document_loaders/index.md)
-- [Document transformers](https://docs.langchain.com/oss/javascript/integrations/document_transformers/index.md)
-- [Model caches](https://docs.langchain.com/oss/javascript/integrations/llm_caching/index.md)
-- [LLMs](https://docs.langchain.com/oss/javascript/integrations/llms/index.md)
-- [Provider-specific middleware](https://docs.langchain.com/oss/javascript/integrations/middleware/index.md)
-- [All integrations](https://docs.langchain.com/oss/javascript/integrations/providers/all_providers.md)
-- [Overview](https://docs.langchain.com/oss/javascript/integrations/providers/anthropic.md)
-- [Overview](https://docs.langchain.com/oss/javascript/integrations/providers/aws.md)
-- [Overview](https://docs.langchain.com/oss/javascript/integrations/providers/google.md)
-- [Overview](https://docs.langchain.com/oss/javascript/integrations/providers/microsoft.md)
-- [Overview](https://docs.langchain.com/oss/javascript/integrations/providers/openai.md)
-- [Integration Packages](https://docs.langchain.com/oss/javascript/integrations/providers/overview.md)
-- [Retrievers](https://docs.langchain.com/oss/javascript/integrations/retrievers/index.md)
-- [Text splitters](https://docs.langchain.com/oss/javascript/integrations/splitters/index.md)
-- [Key-value stores](https://docs.langchain.com/oss/javascript/integrations/stores/index.md)
-- [AzureOpenAIEmbeddings](https://docs.langchain.com/oss/javascript/integrations/text_embedding/azure_openai.md)
-- [BedrockEmbeddings](https://docs.langchain.com/oss/javascript/integrations/text_embedding/bedrock.md)
-- [Embedding models](https://docs.langchain.com/oss/javascript/integrations/text_embedding/index.md)
-- [OpenAIEmbeddings](https://docs.langchain.com/oss/javascript/integrations/text_embedding/openai.md)
-- [Tools](https://docs.langchain.com/oss/javascript/integrations/tools/anthropic.md)
-- [Tools and Toolkits](https://docs.langchain.com/oss/javascript/integrations/tools/index.md)
-- [Tools](https://docs.langchain.com/oss/javascript/integrations/tools/openai.md)
-- [Vector stores](https://docs.langchain.com/oss/javascript/integrations/vectorstores/index.md)
+- [Callback integrations](https://docs.langchain.com/oss/javascript/integrations/callbacks/index.md): Integrate with callbacks using LangChain JavaScript.
+- [ChatAnthropic integration](https://docs.langchain.com/oss/javascript/integrations/chat/anthropic.md): Integrate with the ChatAnthropic chat model using LangChain JavaScript.
+- [AzureChatOpenAI integration](https://docs.langchain.com/oss/javascript/integrations/chat/azure.md): Integrate with the AzureChatOpenAI chat model using LangChain JavaScript.
+- [BedrockChat integration](https://docs.langchain.com/oss/javascript/integrations/chat/bedrock.md): Integrate with the BedrockChat chat model using LangChain JavaScript.
+- [ChatGoogleGenerativeAI integration](https://docs.langchain.com/oss/javascript/integrations/chat/google_generative_ai.md): Integrate with the ChatGoogleGenerativeAI chat model using LangChain JavaScript.
+- [Chat model integrations](https://docs.langchain.com/oss/javascript/integrations/chat/index.md): Integrate with chat models using LangChain JavaScript.
+- [ChatOpenAI integration](https://docs.langchain.com/oss/javascript/integrations/chat/openai.md): Integrate with the ChatOpenAI chat model using LangChain JavaScript.
+- [Document loader integrations](https://docs.langchain.com/oss/javascript/integrations/document_loaders/index.md): Integrate with document loaders using LangChain JavaScript.
+- [Document transformer integrations](https://docs.langchain.com/oss/javascript/integrations/document_transformers/index.md): Integrate with document transformers using LangChain JavaScript.
+- [Cache integrations](https://docs.langchain.com/oss/javascript/integrations/llm_caching/index.md): Integrate with caches using LangChain JavaScript.
+- [LLM integrations](https://docs.langchain.com/oss/javascript/integrations/llms/index.md): Integrate with LLMs using LangChain JavaScript.
+- [Middleware integrations](https://docs.langchain.com/oss/javascript/integrations/middleware/index.md): Integrate with middleware using LangChain JavaScript.
+- [All LangChain JavaScript integration providers](https://docs.langchain.com/oss/javascript/integrations/providers/all_providers.md)
+- [Anthropic integrations](https://docs.langchain.com/oss/javascript/integrations/providers/anthropic.md): Integrate with Anthropic using LangChain JavaScript.
+- [AWS integrations](https://docs.langchain.com/oss/javascript/integrations/providers/aws.md): Integrate with AWS using LangChain JavaScript.
+- [Google integrations](https://docs.langchain.com/oss/javascript/integrations/providers/google.md): Integrate with Google using LangChain JavaScript.
+- [Microsoft integrations](https://docs.langchain.com/oss/javascript/integrations/providers/microsoft.md): Integrate with Microsoft using LangChain JavaScript.
+- [OpenAI integrations](https://docs.langchain.com/oss/javascript/integrations/providers/openai.md): Integrate with OpenAI using LangChain JavaScript.
+- [LangChain JavaScript integrations](https://docs.langchain.com/oss/javascript/integrations/providers/overview.md): Integrate with providers using LangChain JavaScript/TypeScript.
+- [Retriever integrations](https://docs.langchain.com/oss/javascript/integrations/retrievers/index.md): Integrate with retrievers using LangChain JavaScript.
+- [Text splitter integrations](https://docs.langchain.com/oss/javascript/integrations/splitters/index.md): Integrate with text splitters using LangChain.
+- [Store integrations](https://docs.langchain.com/oss/javascript/integrations/stores/index.md): Integrate with stores using LangChain JavaScript.
+- [AzureOpenAIEmbeddings integration](https://docs.langchain.com/oss/javascript/integrations/text_embedding/azure_openai.md): Integrate with the AzureOpenAIEmbeddings embedding model using LangChain JavaScript.
+- [BedrockEmbeddings integration](https://docs.langchain.com/oss/javascript/integrations/text_embedding/bedrock.md): Integrate with the BedrockEmbeddings embedding model using LangChain JavaScript.
+- [Embedding model integrations](https://docs.langchain.com/oss/javascript/integrations/text_embedding/index.md): Integrate with embedding models using LangChain JavaScript.
+- [OpenAIEmbeddings integration](https://docs.langchain.com/oss/javascript/integrations/text_embedding/openai.md): Integrate with the OpenAIEmbeddings embedding model using LangChain JavaScript.
+- [Anthropic integration](https://docs.langchain.com/oss/javascript/integrations/tools/anthropic.md): Integrate with the Anthropic tool using LangChain JavaScript.
+- [Tool integrations](https://docs.langchain.com/oss/javascript/integrations/tools/index.md): Integrate with tools using LangChain JavaScript.
+- [OpenAI integration](https://docs.langchain.com/oss/javascript/integrations/tools/openai.md): Integrate with the OpenAI tool using LangChain JavaScript.
+- [Vector store integrations](https://docs.langchain.com/oss/javascript/integrations/vectorstores/index.md): Integrate with vector stores using LangChain JavaScript.
 - [LangChain Academy](https://docs.langchain.com/oss/javascript/langchain/academy.md)
 - [Agents](https://docs.langchain.com/oss/javascript/langchain/agents.md)
 - [Changelog](https://docs.langchain.com/oss/javascript/langchain/changelog-js.md)
@@ -701,25 +723,25 @@ This endpoint also functions as the endpoint to list all threads.
 - [Quickstart](https://docs.langchain.com/oss/python/deepagents/quickstart.md): Build your first deep agent in minutes
 - [Skills](https://docs.langchain.com/oss/python/deepagents/skills.md): Learn how to extend your deep agent's capabilities with skills
 - [Subagents](https://docs.langchain.com/oss/python/deepagents/subagents.md): Learn how to use subagents to delegate work and keep context clean
-- [ChatGroq](https://docs.langchain.com/oss/python/integrations/chat/groq.md): Get started using Groq [chat models](/oss/python/langchain/models) in LangChain.
-- [Chat models](https://docs.langchain.com/oss/python/integrations/chat/index.md)
-- [null](https://docs.langchain.com/oss/python/integrations/document_loaders/index.md)
-- [Provider-specific middleware](https://docs.langchain.com/oss/python/integrations/middleware/index.md)
-- [All integration providers](https://docs.langchain.com/oss/python/integrations/providers/all_providers.md)
-- [Anthropic (Claude)](https://docs.langchain.com/oss/python/integrations/providers/anthropic.md)
-- [AWS (Amazon)](https://docs.langchain.com/oss/python/integrations/providers/aws.md)
-- [Google](https://docs.langchain.com/oss/python/integrations/providers/google.md)
-- [Hugging Face](https://docs.langchain.com/oss/python/integrations/providers/huggingface.md)
-- [Microsoft](https://docs.langchain.com/oss/python/integrations/providers/microsoft.md)
-- [Ollama](https://docs.langchain.com/oss/python/integrations/providers/ollama.md)
-- [OpenAI](https://docs.langchain.com/oss/python/integrations/providers/openai.md)
-- [LangChain integrations packages](https://docs.langchain.com/oss/python/integrations/providers/overview.md)
-- [Retrievers](https://docs.langchain.com/oss/python/integrations/retrievers/index.md)
-- [Text splitters](https://docs.langchain.com/oss/python/integrations/splitters/index.md)
-- [Key-value stores](https://docs.langchain.com/oss/python/integrations/stores/index.md)
-- [Embedding models](https://docs.langchain.com/oss/python/integrations/text_embedding/index.md)
-- [Tools and toolkits](https://docs.langchain.com/oss/python/integrations/tools/index.md)
-- [Vector stores](https://docs.langchain.com/oss/python/integrations/vectorstores/index.md)
+- [Chat model integrations](https://docs.langchain.com/oss/python/integrations/chat/index.md): Integrate with chat models using LangChain Python.
+- [Document loader integrations](https://docs.langchain.com/oss/python/integrations/document_loaders/index.md): Integrate with document loaders using LangChain Python.
+- [Middleware integrations](https://docs.langchain.com/oss/python/integrations/middleware/index.md): Integrate with middleware using LangChain Python.
+- [All LangChain Python integration providers](https://docs.langchain.com/oss/python/integrations/providers/all_providers.md)
+- [Anthropic (Claude) integrations](https://docs.langchain.com/oss/python/integrations/providers/anthropic.md): Integrate with Anthropic (Claude) using LangChain Python.
+- [AWS (Amazon) integrations](https://docs.langchain.com/oss/python/integrations/providers/aws.md): Integrate with AWS (Amazon) using LangChain Python.
+- [Google integrations](https://docs.langchain.com/oss/python/integrations/providers/google.md): Integrate with Google using LangChain Python.
+- [Groq integrations](https://docs.langchain.com/oss/python/integrations/providers/groq.md): Integrate with Groq using LangChain Python.
+- [Hugging Face integrations](https://docs.langchain.com/oss/python/integrations/providers/huggingface.md): Integrate with Hugging Face using LangChain Python.
+- [Microsoft integrations](https://docs.langchain.com/oss/python/integrations/providers/microsoft.md): Integrate with Microsoft using LangChain Python.
+- [Ollama integrations](https://docs.langchain.com/oss/python/integrations/providers/ollama.md): Integrate with Ollama using LangChain Python.
+- [OpenAI integrations](https://docs.langchain.com/oss/python/integrations/providers/openai.md): Integrate with OpenAI using LangChain Python.
+- [LangChain Python integrations](https://docs.langchain.com/oss/python/integrations/providers/overview.md): Integrate with providers using LangChain Python.
+- [Retriever integrations](https://docs.langchain.com/oss/python/integrations/retrievers/index.md): Integrate with retrievers using LangChain Python.
+- [Text splitter integrations](https://docs.langchain.com/oss/python/integrations/splitters/index.md): Integrate with text splitters using LangChain.
+- [Store integrations](https://docs.langchain.com/oss/python/integrations/stores/index.md): Integrate with stores using LangChain Python.
+- [Embedding model integrations](https://docs.langchain.com/oss/python/integrations/text_embedding/index.md): Integrate with embedding models using LangChain Python.
+- [Tool integrations](https://docs.langchain.com/oss/python/integrations/tools/index.md): Integrate with tools using LangChain Python.
+- [Vector store integrations](https://docs.langchain.com/oss/python/integrations/vectorstores/index.md): Integrate with vector stores using LangChain Python.
 - [LangChain Academy](https://docs.langchain.com/oss/python/langchain/academy.md)
 - [Agents](https://docs.langchain.com/oss/python/langchain/agents.md)
 - [Changelog](https://docs.langchain.com/oss/python/langchain/changelog-py.md)

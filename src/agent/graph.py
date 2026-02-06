@@ -1,5 +1,7 @@
 """Agent graph construction."""
 
+from typing import Any
+
 from langchain_community.vectorstores import FAISS
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langgraph.graph import END, START, StateGraph
@@ -14,7 +16,14 @@ from src.agent.state import AgentState
 from src.config import AgentMode, Settings
 
 
-def create_retriever(settings: Settings):
+def create_retriever(settings: Settings) -> Any:
+    if settings.vectorstore_path is None:
+        raise ValueError("VECTORSTORE_PATH is not configured")
+    if settings.embedding_model is None:
+        raise ValueError("EMBEDDING_MODEL is not configured")
+    if settings.ollama_base_url is None:
+        raise ValueError("OLLAMA_BASE_URL is not configured")
+
     embeddings = OllamaEmbeddings(
         model=settings.embedding_model,
         base_url=settings.ollama_base_url,
@@ -33,11 +42,16 @@ def create_retriever(settings: Settings):
     )
     return vectorstore.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": settings.retrieval_k},
+        search_kwargs={"k": settings.retrieval_k or 5},
     )
 
 
-def create_llm(settings: Settings):
+def create_llm(settings: Settings) -> ChatOllama:
+    if settings.llm_model is None:
+        raise ValueError("LLM_MODEL is not configured")
+    if settings.ollama_base_url is None:
+        raise ValueError("OLLAMA_BASE_URL is not configured")
+
     return ChatOllama(
         model=settings.llm_model,
         base_url=settings.ollama_base_url,
@@ -45,7 +59,7 @@ def create_llm(settings: Settings):
     )
 
 
-def create_search_tool(settings: Settings):
+def create_search_tool(settings: Settings) -> Any:
     if settings.mode != AgentMode.ONLINE:
         return None
 
@@ -60,7 +74,7 @@ def create_search_tool(settings: Settings):
     return None
 
 
-def create_agent(settings: Settings):
+def create_agent(settings: Settings) -> Any:
     retriever = create_retriever(settings)
     llm = create_llm(settings)
     search_tool = create_search_tool(settings)
@@ -84,7 +98,7 @@ def create_agent(settings: Settings):
         # Route after retrieve based on retrieval quality
         graph.add_conditional_edges(
             "retrieve",
-            create_route_after_retrieve(settings.rerank_threshold),
+            create_route_after_retrieve(settings.rerank_threshold or 0.0),
             {
                 "generate": "generate",
                 "web_search_and_generate": "web_search_and_generate",
@@ -100,4 +114,4 @@ def create_agent(settings: Settings):
 
 
 def visualize_graph(settings: Settings) -> str:
-    return create_agent(settings).get_graph().draw_mermaid()
+    return str(create_agent(settings).get_graph().draw_mermaid())

@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar, cast
 
 import yaml
 from dotenv import load_dotenv
@@ -17,12 +17,18 @@ class AgentMode(Enum):
     ONLINE = "online"
 
 
-def _get_env_or_yaml(env_key: str, yaml_val: Any, default: Any = None) -> Any:
+T = TypeVar("T")
+
+
+def _get_env_or_yaml(env_key: str, yaml_val: Any, default: T) -> T:
     """Get value from env var, then yaml, then default."""
-    if env_key and os.getenv(env_key):
-        val = os.getenv(env_key)
-        return type(default)(val) if isinstance(default, (int, float)) else val
-    return yaml_val if yaml_val is not None else default
+    if env_key:
+        env_val = os.getenv(env_key)
+        if env_val is not None:
+            if default is None:
+                return cast(T, env_val)
+            return cast(T, type(default)(env_val))
+    return cast(T, yaml_val) if yaml_val is not None else default
 
 
 @dataclass
@@ -51,7 +57,7 @@ class Settings:
     rerank_threshold: Optional[float] = None
     max_web_results: int = 3
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         path = Path(self.config_path)
         self._config = yaml.safe_load(path.read_text()) if path.exists() else {}
 
@@ -72,31 +78,27 @@ class Settings:
             "http://localhost:11434",
         )
 
-        self.temperature = self.temperature or float(
-            _get_env_or_yaml(
-                "TEMPERATURE", llm_cfg.get("parameters", {}).get("temperature"), 0.1
-            )
+        self.temperature = self.temperature or _get_env_or_yaml(
+            "TEMPERATURE", llm_cfg.get("parameters", {}).get("temperature"), 0.1
         )
-        self.max_tokens = self.max_tokens or int(
-            _get_env_or_yaml(
-                "MAX_TOKENS", llm_cfg.get("parameters", {}).get("max_tokens"), 2000
-            )
+        self.max_tokens = self.max_tokens or _get_env_or_yaml(
+            "MAX_TOKENS", llm_cfg.get("parameters", {}).get("max_tokens"), 2000
         )
 
         mode_str = _get_env_or_yaml("AGENT_MODE", agent_cfg.get("mode"), "offline")
         self.mode = self.mode or AgentMode(mode_str.lower())
 
-        self.retrieval_k = self.retrieval_k or int(
-            _get_env_or_yaml("RETRIEVAL_K", agent_cfg.get("retrieval_k"), 5)
+        self.retrieval_k = self.retrieval_k or _get_env_or_yaml(
+            "RETRIEVAL_K", agent_cfg.get("retrieval_k"), 5
         )
-        self.chunk_size = self.chunk_size or int(
-            _get_env_or_yaml("CHUNK_SIZE", agent_cfg.get("chunk_size"), 1000)
+        self.chunk_size = self.chunk_size or _get_env_or_yaml(
+            "CHUNK_SIZE", agent_cfg.get("chunk_size"), 1000
         )
-        self.chunk_overlap = self.chunk_overlap or int(
-            _get_env_or_yaml("CHUNK_OVERLAP", agent_cfg.get("chunk_overlap"), 200)
+        self.chunk_overlap = self.chunk_overlap or _get_env_or_yaml(
+            "CHUNK_OVERLAP", agent_cfg.get("chunk_overlap"), 200
         )
-        self.rerank_threshold = self.rerank_threshold or float(
-            _get_env_or_yaml("RERANK_THRESHOLD", agent_cfg.get("rerank_threshold"), 0.0)
+        self.rerank_threshold = self.rerank_threshold or _get_env_or_yaml(
+            "RERANK_THRESHOLD", agent_cfg.get("rerank_threshold"), 0.0
         )
 
         data_dir_str = _get_env_or_yaml("DATA_DIR", data_cfg.get("dir"), "data")

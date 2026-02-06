@@ -1,5 +1,7 @@
 """Agent node functions."""
 
+from typing import Any, Callable
+
 from langchain.chat_models.base import BaseChatModel
 from sentence_transformers import CrossEncoder
 
@@ -9,7 +11,7 @@ from src.agent.state import AgentState
 _reranker = None
 
 
-def get_reranker():
+def get_reranker() -> CrossEncoder:
     """Lazy load cross-encoder for reranking."""
     global _reranker
     if _reranker is None:
@@ -17,10 +19,10 @@ def get_reranker():
     return _reranker
 
 
-def create_retrieve_node(retriever):
+def create_retrieve_node(retriever: Any) -> Callable[[AgentState], dict[str, Any]]:
     """Create retrieval node with reranking."""
 
-    def retrieve(state: AgentState):
+    def retrieve(state: AgentState) -> dict[str, Any]:
         query = state["messages"][-1].content if state["messages"] else ""
         # Get more candidates for reranking
         docs_with_scores = retriever.vectorstore.similarity_search_with_score(
@@ -53,7 +55,7 @@ def create_retrieve_node(retriever):
     return retrieve
 
 
-def create_route_after_retrieve(rerank_threshold: float):
+def create_route_after_retrieve(rerank_threshold: float) -> Callable[[AgentState], str]:
     """Create routing function based on retrieval quality.
 
     Cross-encoder scores: higher = more relevant
@@ -64,7 +66,9 @@ def create_route_after_retrieve(rerank_threshold: float):
         if state["mode"] == "offline":
             return "generate"
 
-        retrieval_score = state.get("retrieval_score", 0.0)
+        retrieval_score = state.get("retrieval_score")
+        if retrieval_score is None:
+            retrieval_score = 0.0
 
         if retrieval_score < rerank_threshold:
             return "web_search_and_generate"
@@ -74,10 +78,10 @@ def create_route_after_retrieve(rerank_threshold: float):
     return route_after_retrieve
 
 
-def create_generate_node(llm: BaseChatModel):
+def create_generate_node(llm: BaseChatModel) -> Callable[[AgentState], dict[str, Any]]:
     """Create generation node."""
 
-    def generate(state: AgentState):
+    def generate(state: AgentState) -> dict[str, Any]:
         query = state["messages"][-1].content if state["messages"] else ""
         context = "\n\n".join(state["retrieved_contexts"])
         prompt = f"""Based on the following context, answer the question.
@@ -94,10 +98,12 @@ Answer:"""
     return generate
 
 
-def create_web_search_and_generate_node(llm: BaseChatModel, search_tool):
+def create_web_search_and_generate_node(
+    llm: BaseChatModel, search_tool: Any
+) -> Callable[[AgentState], dict[str, Any]]:
     """Search web and generate with combined context."""
 
-    def web_search_and_generate(state: AgentState):
+    def web_search_and_generate(state: AgentState) -> dict[str, Any]:
         query = state["messages"][-1].content if state["messages"] else ""
         # Perform web search
         search_results = search_tool.invoke(query)

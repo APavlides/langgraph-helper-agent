@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from typing import Optional
+from typing import Any, Optional
 
 from langchain_core.messages import HumanMessage
 from rich.console import Console
@@ -74,8 +74,9 @@ Examples:
 
 def display_welcome(settings: Settings) -> None:
     """Display welcome message with current configuration."""
-    mode_color = "green" if settings.mode == AgentMode.OFFLINE else "blue"
-    mode_text = f"[bold {mode_color}]{settings.mode.value.upper()}[/]"
+    resolved_mode = settings.mode or AgentMode.OFFLINE
+    mode_color = "green" if resolved_mode == AgentMode.OFFLINE else "blue"
+    mode_text = f"[bold {mode_color}]{resolved_mode.value.upper()}[/]"
 
     console.print(
         Panel(
@@ -109,7 +110,7 @@ def display_response(
 
 
 def run_single_query(
-    agent, question: str, mode: AgentMode, verbose: bool = False
+    agent: Any, question: str, mode: AgentMode, verbose: bool = False
 ) -> None:
     """Run a single query through the agent."""
     with console.status("[bold cyan]Thinking...[/]"):
@@ -140,7 +141,7 @@ def run_single_query(
                 )
 
 
-def run_interactive(agent, settings: Settings, verbose: bool = False) -> None:
+def run_interactive(agent: Any, settings: Settings, verbose: bool = False) -> None:
     """Run interactive chat mode."""
     display_welcome(settings)
 
@@ -175,7 +176,8 @@ def run_interactive(agent, settings: Settings, verbose: bool = False) -> None:
             continue
 
         if user_input_lower == "mode":
-            console.print(f"Current mode: [bold]{settings.mode.value}[/bold]")
+            current_mode = settings.mode or AgentMode.OFFLINE
+            console.print(f"Current mode: [bold]{current_mode.value}[/bold]")
             continue
 
         if not user_input.strip():
@@ -236,6 +238,7 @@ def main() -> int:
         # Create settings
         mode = AgentMode(args.mode) if args.mode else None
         settings = Settings(mode=mode)
+        resolved_mode = settings.mode or AgentMode.OFFLINE
 
         # Show graph and exit if requested
         if args.show_graph:
@@ -250,7 +253,7 @@ def main() -> int:
         if args.interactive or args.question is None:
             run_interactive(agent, settings, args.verbose)
         else:
-            run_single_query(agent, args.question, settings.mode, args.verbose)
+            run_single_query(agent, args.question, resolved_mode, args.verbose)
 
         return 0
 
