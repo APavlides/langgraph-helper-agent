@@ -25,12 +25,15 @@ class TestAgentMode:
 class TestSettings:
     """Tests for Settings configuration."""
 
-    @patch.dict(os.environ, {
-        "AGENT_MODE": "offline",
-        "LLM_MODEL": "llama3.2:3b",
-        "EMBEDDING_MODEL": "nomic-embed-text",
-        "OLLAMA_BASE_URL": "http://localhost:11434",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "AGENT_MODE": "offline",
+            "LLM_MODEL": "llama3.2:3b",
+            "EMBEDDING_MODEL": "nomic-embed-text",
+            "OLLAMA_BASE_URL": "http://localhost:11434",
+        },
+    )
     def test_settings_from_env(self):
         settings = Settings()
         assert settings.mode == AgentMode.OFFLINE
@@ -38,18 +41,25 @@ class TestSettings:
         assert settings.embedding_model == "nomic-embed-text"
         assert settings.ollama_base_url == "http://localhost:11434"
 
-    @patch.dict(os.environ, {
-        "AGENT_MODE": "online",
-        "TAVILY_API_KEY": "tavily-key",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "AGENT_MODE": "online",
+            "TAVILY_API_KEY": "tavily-key",
+        },
+    )
     def test_online_mode_settings(self):
         settings = Settings()
         assert settings.mode == AgentMode.ONLINE
         assert settings.tavily_api_key == "tavily-key"
 
-    @patch.dict(os.environ, {
-        "AGENT_MODE": "online",
-    }, clear=True)
+    @patch.dict(
+        os.environ,
+        {
+            "AGENT_MODE": "online",
+        },
+        clear=True,
+    )
     def test_online_mode_without_tavily_raises(self):
         with pytest.raises(ValueError, match="TAVILY_API_KEY required"):
             Settings()

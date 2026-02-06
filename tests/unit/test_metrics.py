@@ -172,7 +172,7 @@ class TestAggregateScore:
         )
         score = calculate_aggregate_score(result)
         # Weighted average: 0.8*0.2 + 0.9*0.2 + 0.7*0.2 + 0.8*0.25 + 1.0*0.15
-        expected = (0.8 * 0.2 + 0.9 * 0.2 + 0.7 * 0.2 + 0.8 * 0.25 + 1.0 * 0.15)
+        expected = 0.8 * 0.2 + 0.9 * 0.2 + 0.7 * 0.2 + 0.8 * 0.25 + 1.0 * 0.15
         assert score == pytest.approx(expected)
 
     def test_partial_scores(self):

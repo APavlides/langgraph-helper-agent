@@ -1,4 +1,5 @@
 """Tests for agent state management."""
+
 from langchain_core.messages import HumanMessage
 
 from src.agent.state import AgentState

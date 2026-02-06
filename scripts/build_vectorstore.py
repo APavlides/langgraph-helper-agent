@@ -117,7 +117,9 @@ def build_vectorstore(
     console.print(f"[green]✓[/green] Created {len(chunks)} chunks")
 
     # Create embeddings and vectorstore
-    console.print(f"\n[cyan]🧮 Creating embeddings with Ollama ({embedding_model})...[/cyan]")
+    console.print(
+        f"\n[cyan]🧮 Creating embeddings with Ollama ({embedding_model})...[/cyan]"
+    )
     console.print(f"   Base URL: {ollama_base_url}")
     console.print(f"   Batch size: {batch_size}")
 
@@ -128,6 +130,7 @@ def build_vectorstore(
 
     # Convert to LangChain documents
     from langchain_core.documents import Document
+
     langchain_docs = [
         Document(page_content=chunk["content"], metadata=chunk["metadata"])
         for chunk in chunks
@@ -149,7 +152,7 @@ def build_vectorstore(
         )
 
         for i in range(0, len(langchain_docs), batch_size):
-            batch = langchain_docs[i:i + batch_size]
+            batch = langchain_docs[i : i + batch_size]
 
             if vectorstore is None:
                 vectorstore = FAISS.from_documents(batch, embeddings)

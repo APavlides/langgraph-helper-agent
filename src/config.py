@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from dotenv import load_dotenv
@@ -54,23 +54,23 @@ class Settings:
     config_path: str = "config.yaml"
     _config: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
 
-    mode: Optional[AgentMode] = None
-    tavily_api_key: Optional[str] = None
+    mode: AgentMode | None = None
+    tavily_api_key: str | None = None
 
-    llm_model: Optional[str] = None
-    embedding_model: Optional[str] = None
-    ollama_base_url: Optional[str] = None
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
+    llm_model: str | None = None
+    embedding_model: str | None = None
+    ollama_base_url: str | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
 
-    retrieval_k: Optional[int] = None
-    chunk_size: Optional[int] = None
-    chunk_overlap: Optional[int] = None
+    retrieval_k: int | None = None
+    chunk_size: int | None = None
+    chunk_overlap: int | None = None
 
-    data_dir: Optional[Path] = None
-    vectorstore_path: Optional[Path] = None
+    data_dir: Path | None = None
+    vectorstore_path: Path | None = None
 
-    rerank_threshold: Optional[float] = None
+    rerank_threshold: float | None = None
     max_web_results: int = 3
 
     def __post_init__(self) -> None:
@@ -101,9 +101,7 @@ class Settings:
             "MAX_TOKENS", llm_cfg.get("parameters", {}).get("max_tokens"), 2000
         )
 
-        mode_str = _get_str_env_or_yaml(
-            "AGENT_MODE", agent_cfg.get("mode"), "offline"
-        )
+        mode_str = _get_str_env_or_yaml("AGENT_MODE", agent_cfg.get("mode"), "offline")
         self.mode = self.mode or AgentMode(mode_str.lower())
 
         self.retrieval_k = self.retrieval_k or _get_int_env_or_yaml(

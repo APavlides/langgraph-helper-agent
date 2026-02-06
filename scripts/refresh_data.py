@@ -165,7 +165,8 @@ def main():
         help="Include full versions (larger files, more comprehensive)",
     )
     parser.add_argument(
-        "--quiet", "-q",
+        "--quiet",
+        "-q",
         action="store_true",
         help="Suppress output",
     )

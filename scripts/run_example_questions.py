@@ -46,7 +46,7 @@ def run_questions(questions, outfile: Path, mode: str | None = None) -> None:
 
 
 def main() -> None:
-    data = json.load(open("evaluation/dataset.json", "r", encoding="utf-8"))
+    data = json.load(open("evaluation/dataset.json", encoding="utf-8"))
     questions = data["questions"]
 
     outdir = Path("example_outputs")
