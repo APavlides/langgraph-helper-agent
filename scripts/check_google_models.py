@@ -9,7 +9,6 @@ def check_models():
     """List available Google Generative AI models."""
     try:
         from google.generativeai import list_models
-        from langchain_google_genai import GoogleGenerativeAI
     except ImportError:
         print("Error: langchain-google-genai not installed")
         print("Install with: pip install langchain-google-genai")

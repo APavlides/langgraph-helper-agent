@@ -42,11 +42,11 @@ def compute_hash(content: str) -> str:
 def download_file(url: str, timeout: float = 30.0) -> str | None:
     """
     Download a file from URL.
-    
+
     Args:
         url: URL to download
         timeout: Request timeout in seconds
-        
+
     Returns:
         File content as string, or None if download failed
     """
@@ -63,22 +63,22 @@ def download_file(url: str, timeout: float = 30.0) -> str | None:
 def save_file(content: str, filepath: Path) -> bool:
     """
     Save content to file, checking if it changed.
-    
+
     Args:
         content: Content to save
         filepath: Path to save to
-        
+
     Returns:
         True if file was updated, False if unchanged
     """
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Check if content changed
     if filepath.exists():
         existing_content = filepath.read_text()
         if compute_hash(existing_content) == compute_hash(content):
             return False
-    
+
     filepath.write_text(content)
     return True
 
@@ -86,11 +86,11 @@ def save_file(content: str, filepath: Path) -> bool:
 def refresh_data(include_full: bool = False, verbose: bool = True) -> dict:
     """
     Download all documentation files.
-    
+
     Args:
         include_full: Whether to download full versions (larger files)
         verbose: Whether to print progress
-        
+
     Returns:
         Dictionary with download results
     """
@@ -100,34 +100,34 @@ def refresh_data(include_full: bool = False, verbose: bool = True) -> dict:
         "failed": [],
         "timestamp": datetime.now(UTC).isoformat(),
     }
-    
+
     if verbose:
-        print(f"📥 Refreshing documentation data...")
+        print("📥 Refreshing documentation data...")
         print(f"   Output directory: {DATA_DIR}")
         print()
-    
+
     for source_name, urls in SOURCES.items():
         # Always download short version
         versions_to_download = ["short"]
         if include_full:
             versions_to_download.append("full")
-        
+
         for version in versions_to_download:
             url = urls[version]
             filename = f"{source_name}_llms{'_full' if version == 'full' else ''}.txt"
             filepath = DATA_DIR / filename
-            
+
             if verbose:
                 print(f"📄 {source_name} ({version})...")
-            
+
             content = download_file(url)
-            
+
             if content is None:
                 results["failed"].append(filename)
                 continue
-            
+
             updated = save_file(content, filepath)
-            
+
             if updated:
                 results["downloaded"].append(filename)
                 if verbose:
@@ -136,7 +136,7 @@ def refresh_data(include_full: bool = False, verbose: bool = True) -> dict:
                 results["unchanged"].append(filename)
                 if verbose:
                     print(f"   ⏭️  Unchanged: {filename}")
-    
+
     # Save metadata
     metadata_path = DATA_DIR / "metadata.txt"
     metadata = f"""# LangGraph Helper Agent - Documentation Data
@@ -144,14 +144,14 @@ def refresh_data(include_full: bool = False, verbose: bool = True) -> dict:
 # Files: {', '.join(results['downloaded'] + results['unchanged'])}
 """
     metadata_path.write_text(metadata)
-    
+
     if verbose:
         print()
-        print(f"📊 Summary:")
+        print("📊 Summary:")
         print(f"   Updated: {len(results['downloaded'])}")
         print(f"   Unchanged: {len(results['unchanged'])}")
         print(f"   Failed: {len(results['failed'])}")
-    
+
     return results
 
 
@@ -169,14 +169,14 @@ def main():
         action="store_true",
         help="Suppress output",
     )
-    
+
     args = parser.parse_args()
-    
+
     results = refresh_data(
         include_full=args.full,
         verbose=not args.quiet,
     )
-    
+
     # Exit with error if any downloads failed
     if results["failed"]:
         return 1

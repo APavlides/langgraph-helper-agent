@@ -6,7 +6,6 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 # Ragas imports
 try:
@@ -34,7 +33,6 @@ from evaluation.metrics import (
     calculate_code_validity,
     calculate_topic_coverage,
     check_code_presence,
-    check_snippet_presence,
 )
 from src.agent.graph import create_agent
 from src.config import AgentMode, Settings
@@ -235,19 +233,19 @@ def run_ragas_evaluation(results: list[EvaluationResult]) -> list[EvaluationResu
             or "429" in error_msg
             or "quota" in error_msg.lower()
         ):
-            print(f"⚠ Ragas evaluation skipped: Google API quota exhausted")
-            print(f"  Free tier limits: 15 RPM, 1500 RPD")
-            print(f"  Quota resets daily. Try again tomorrow or upgrade at:")
-            print(f"  https://ai.google.dev/pricing")
+            print("⚠ Ragas evaluation skipped: Google API quota exhausted")
+            print("  Free tier limits: 15 RPM, 1500 RPD")
+            print("  Quota resets daily. Try again tomorrow or upgrade at:")
+            print("  https://ai.google.dev/pricing")
         elif "404" in error_msg or "NOT_FOUND" in error_msg:
             print(f"⚠ Ragas evaluation skipped: Model '{gemini_model}' not available")
             print(
-                f"  Available models: gemini-2.5-flash, gemini-2.5-flash-lite, gemini-3-flash"
+                "  Available models: gemini-2.5-flash, gemini-2.5-flash-lite, gemini-3-flash"
             )
-            print(f"  Set via: export GOOGLE_GEMINI_MODEL=gemini-2.5-flash")
+            print("  Set via: export GOOGLE_GEMINI_MODEL=gemini-2.5-flash")
         else:
             print(f"⚠ Ragas evaluation failed: {e}")
-            print(f"  Evaluation will continue with custom metrics only.")
+            print("  Evaluation will continue with custom metrics only.")
 
     return results
 
@@ -327,7 +325,7 @@ def print_summary(aggregate: AggregateMetrics, mode: str) -> None:
     print(
         f"Questions: {aggregate.successful_questions}/{aggregate.total_questions} successful"
     )
-    print(f"\nAggregate Metrics:")
+    print("\nAggregate Metrics:")
     print(f"  Avg Aggregate Score:    {aggregate.avg_aggregate_score:.3f}")
     print(f"  Avg Context Relevancy:  {aggregate.avg_context_relevancy:.3f}")
     print(f"  Avg Faithfulness:       {aggregate.avg_faithfulness:.3f}")
@@ -337,12 +335,12 @@ def print_summary(aggregate: AggregateMetrics, mode: str) -> None:
     print(f"  Avg Latency:            {aggregate.avg_latency_ms:.0f}ms")
 
     if aggregate.scores_by_category:
-        print(f"\nScores by Category:")
+        print("\nScores by Category:")
         for cat, score in sorted(aggregate.scores_by_category.items()):
             print(f"  {cat:20s}: {score:.3f}")
 
     if aggregate.scores_by_difficulty:
-        print(f"\nScores by Difficulty:")
+        print("\nScores by Difficulty:")
         for diff, score in sorted(aggregate.scores_by_difficulty.items()):
             print(f"  {diff:20s}: {score:.3f}")
 
@@ -416,7 +414,7 @@ def main():
         return 1
 
     # Evaluate each question
-    print(f"\nRunning evaluation...")
+    print("\nRunning evaluation...")
     results = []
 
     for i, q in enumerate(questions):

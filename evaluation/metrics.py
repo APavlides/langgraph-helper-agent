@@ -195,7 +195,7 @@ def calculate_aggregate_score(result: EvaluationResult) -> float:
 
     # Normalize weights to sum to 1
     total_weight = sum(weights)
-    return sum(s * w for s, w in zip(scores, weights)) / total_weight
+    return sum(s * w for s, w in zip(scores, weights, strict=False)) / total_weight
 
 
 @dataclass

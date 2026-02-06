@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import HumanMessage
 from rich.console import Console
@@ -23,15 +23,15 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Single question in offline mode
-  python -m src.main --mode offline "How do I add persistence?"
-  
-  # Interactive chat in online mode
-  python -m src.main --mode online --interactive
-  
-  # Use environment variable for mode
-  export AGENT_MODE=online
-  python -m src.main "What's new in LangGraph?"
+    # Single question in offline mode
+    python -m src.main --mode offline "How do I add persistence?"
+
+    # Interactive chat in online mode
+    python -m src.main --mode online --interactive
+
+    # Use environment variable for mode
+    export AGENT_MODE=online
+    python -m src.main "What's new in LangGraph?"
         """,
     )
 
@@ -81,7 +81,7 @@ def display_welcome(settings: Settings) -> None:
     console.print(
         Panel(
             f"""[bold]LangGraph Helper Agent[/bold]
-        
+
 Mode: {mode_text}
 Model: {settings.llm_model}
 Retrieval docs: {settings.retrieval_k}
@@ -95,7 +95,7 @@ Type 'help' for available commands.""",
 
 
 def display_response(
-    response: str, verbose: bool = False, confidence: Optional[float] = None
+    response: str, verbose: bool = False, confidence: float | None = None
 ) -> None:
     """Display the agent's response."""
     # Render as markdown for nice formatting

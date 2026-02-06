@@ -1,6 +1,7 @@
 """Agent node functions."""
 
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from langchain.chat_models.base import BaseChatModel
 from sentence_transformers import CrossEncoder
@@ -41,7 +42,9 @@ def create_retrieve_node(retriever: Any) -> Callable[[AgentState], dict[str, Any
 
         # Sort by rerank scores (higher is better for cross-encoder)
         ranked_docs = sorted(
-            zip(doc_texts, rerank_scores), key=lambda x: x[1], reverse=True
+            zip(doc_texts, rerank_scores, strict=False),
+            key=lambda x: x[1],
+            reverse=True,
         )
 
         # Take top k after reranking
