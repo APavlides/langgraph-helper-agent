@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, TypeVar, cast
+from typing import Any, Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -17,18 +17,34 @@ class AgentMode(Enum):
     ONLINE = "online"
 
 
-T = TypeVar("T")
+def _get_str_env_or_yaml(env_key: str, yaml_val: Any, default: str) -> str:
+    """Get string value from env var, then yaml, then default."""
+    env_val = os.getenv(env_key)
+    if env_val is not None:
+        return env_val
+    if yaml_val is not None:
+        return str(yaml_val)
+    return default
 
 
-def _get_env_or_yaml(env_key: str, yaml_val: Any, default: T) -> T:
-    """Get value from env var, then yaml, then default."""
-    if env_key:
-        env_val = os.getenv(env_key)
-        if env_val is not None:
-            if default is None:
-                return cast(T, env_val)
-            return cast(T, type(default)(env_val))
-    return cast(T, yaml_val) if yaml_val is not None else default
+def _get_int_env_or_yaml(env_key: str, yaml_val: Any, default: int) -> int:
+    """Get int value from env var, then yaml, then default."""
+    env_val = os.getenv(env_key)
+    if env_val is not None:
+        return int(env_val)
+    if yaml_val is not None:
+        return int(yaml_val)
+    return default
+
+
+def _get_float_env_or_yaml(env_key: str, yaml_val: Any, default: float) -> float:
+    """Get float value from env var, then yaml, then default."""
+    env_val = os.getenv(env_key)
+    if env_val is not None:
+        return float(env_val)
+    if yaml_val is not None:
+        return float(yaml_val)
+    return default
 
 
 @dataclass
@@ -66,45 +82,47 @@ class Settings:
         agent_cfg = self._config.get("agent", {})
         data_cfg = self._config.get("data", {})
 
-        self.llm_model = self.llm_model or _get_env_or_yaml(
+        self.llm_model = self.llm_model or _get_str_env_or_yaml(
             "LLM_MODEL", llm_cfg.get("model", {}).get("name"), "llama3.2:3b"
         )
-        self.embedding_model = self.embedding_model or _get_env_or_yaml(
+        self.embedding_model = self.embedding_model or _get_str_env_or_yaml(
             "EMBEDDING_MODEL", emb_cfg.get("model"), "nomic-embed-text"
         )
-        self.ollama_base_url = self.ollama_base_url or _get_env_or_yaml(
+        self.ollama_base_url = self.ollama_base_url or _get_str_env_or_yaml(
             "OLLAMA_BASE_URL",
             llm_cfg.get("ollama", {}).get("base_url") or emb_cfg.get("base_url"),
             "http://localhost:11434",
         )
 
-        self.temperature = self.temperature or _get_env_or_yaml(
+        self.temperature = self.temperature or _get_float_env_or_yaml(
             "TEMPERATURE", llm_cfg.get("parameters", {}).get("temperature"), 0.1
         )
-        self.max_tokens = self.max_tokens or _get_env_or_yaml(
+        self.max_tokens = self.max_tokens or _get_int_env_or_yaml(
             "MAX_TOKENS", llm_cfg.get("parameters", {}).get("max_tokens"), 2000
         )
 
-        mode_str = _get_env_or_yaml("AGENT_MODE", agent_cfg.get("mode"), "offline")
+        mode_str = _get_str_env_or_yaml(
+            "AGENT_MODE", agent_cfg.get("mode"), "offline"
+        )
         self.mode = self.mode or AgentMode(mode_str.lower())
 
-        self.retrieval_k = self.retrieval_k or _get_env_or_yaml(
+        self.retrieval_k = self.retrieval_k or _get_int_env_or_yaml(
             "RETRIEVAL_K", agent_cfg.get("retrieval_k"), 5
         )
-        self.chunk_size = self.chunk_size or _get_env_or_yaml(
+        self.chunk_size = self.chunk_size or _get_int_env_or_yaml(
             "CHUNK_SIZE", agent_cfg.get("chunk_size"), 1000
         )
-        self.chunk_overlap = self.chunk_overlap or _get_env_or_yaml(
+        self.chunk_overlap = self.chunk_overlap or _get_int_env_or_yaml(
             "CHUNK_OVERLAP", agent_cfg.get("chunk_overlap"), 200
         )
-        self.rerank_threshold = self.rerank_threshold or _get_env_or_yaml(
+        self.rerank_threshold = self.rerank_threshold or _get_float_env_or_yaml(
             "RERANK_THRESHOLD", agent_cfg.get("rerank_threshold"), 0.0
         )
 
-        data_dir_str = _get_env_or_yaml("DATA_DIR", data_cfg.get("dir"), "data")
+        data_dir_str = _get_str_env_or_yaml("DATA_DIR", data_cfg.get("dir"), "data")
         self.data_dir = self.data_dir or Path(data_dir_str)
 
-        vectorstore_str = _get_env_or_yaml(
+        vectorstore_str = _get_str_env_or_yaml(
             "VECTORSTORE_PATH", data_cfg.get("vectorstore"), "data/vectorstore"
         )
         self.vectorstore_path = self.vectorstore_path or Path(vectorstore_str)

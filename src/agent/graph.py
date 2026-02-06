@@ -1,6 +1,6 @@
 """Agent graph construction."""
 
-from typing import Any
+from typing import Any, cast
 
 from langchain_community.vectorstores import FAISS
 from langchain_ollama import ChatOllama, OllamaEmbeddings
@@ -83,14 +83,16 @@ def create_agent(settings: Settings) -> Any:
     generate_node = create_generate_node(llm)
 
     graph = StateGraph(AgentState)
-    graph.add_node("retrieve", retrieve_node)
-    graph.add_node("generate", generate_node)
+    graph.add_node("retrieve", cast(Any, retrieve_node))
+    graph.add_node("generate", cast(Any, generate_node))
 
     if settings.mode == AgentMode.ONLINE and search_tool:
         web_search_and_generate_node = create_web_search_and_generate_node(
             llm, search_tool
         )
-        graph.add_node("web_search_and_generate", web_search_and_generate_node)
+        graph.add_node(
+            "web_search_and_generate", cast(Any, web_search_and_generate_node)
+        )
 
     graph.add_edge(START, "retrieve")
 

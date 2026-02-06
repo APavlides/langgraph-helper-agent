@@ -8,7 +8,7 @@ from sentence_transformers import CrossEncoder
 from src.agent.state import AgentState
 
 # Lazy load reranker to avoid startup cost
-_reranker = None
+_reranker: CrossEncoder | None = None
 
 
 def get_reranker() -> CrossEncoder:
@@ -16,6 +16,7 @@ def get_reranker() -> CrossEncoder:
     global _reranker
     if _reranker is None:
         _reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    assert _reranker is not None
     return _reranker
 
 
@@ -31,7 +32,7 @@ def create_retrieve_node(retriever: Any) -> Callable[[AgentState], dict[str, Any
 
         # Rerank with cross-encoder
         reranker = get_reranker()
-        doc_texts = [doc.page_content for doc, _ in docs_with_scores]
+        doc_texts: list[str] = [str(doc.page_content) for doc, _ in docs_with_scores]
         rerank_scores = reranker.predict([(query, text) for text in doc_texts])
 
         # Sort by rerank scores (higher is better for cross-encoder)

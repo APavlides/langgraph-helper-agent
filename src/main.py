@@ -184,7 +184,7 @@ def run_interactive(agent: Any, settings: Settings, verbose: bool = False) -> No
             continue
 
         # Run query
-        run_single_query(agent, user_input, settings.mode, verbose)
+        run_single_query(agent, user_input, settings.mode or AgentMode.OFFLINE, verbose)
 
 
 def run_agent(question: str, mode: str = "offline", verbose: bool = False) -> None:
