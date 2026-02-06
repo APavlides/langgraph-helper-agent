@@ -342,7 +342,6 @@ export LLM_MODEL=llama3.2:1b  # Smaller model
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design, graph routing, and technology stack
 - [docs/CONFIGURATION.md](docs/CONFIGURATION.md) - Advanced configuration options
-- [docs/DOCKER.md](docs/DOCKER.md) - Docker deployment guide
 - [docs/EVALUATION.md](docs/EVALUATION.md) - RAGAS evaluation setup
 - [docs/RAGAS_EVALUATION.md](docs/RAGAS_EVALUATION.md) - Google Gemini free tier limits and troubleshooting
 
