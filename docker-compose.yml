@@ -1,9 +1,9 @@
 # Docker Compose for LangGraph Helper Agent
 # 
 # Usage:
-#   docker compose up agent-offline     # Run in offline mode
-#   docker compose up agent-online      # Run in online mode  
-#   docker compose run --rm setup       # Initial setup (download docs, build vectorstore)
+#   docker compose run --rm agent-offline     # Run in offline mode (Interactive)
+#   docker compose run --rm agent-online      # Run in online mode (Interactive)
+#   docker compose run --rm setup             # Initial setup (download docs, build vectorstore)
 
 services:
   # === Setup service (run once) ===
@@ -11,12 +11,15 @@ services:
     build:
       context: .
       target: runtime
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/app/data
     env_file:
       - .env
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
     entrypoint: /bin/bash
     command: |
       -c "
@@ -36,12 +39,15 @@ services:
     build:
       context: .
       target: runtime
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/app/data:ro
     env_file:
       - .env
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - AGENT_MODE=offline
     stdin_open: true
     tty: true
@@ -52,6 +58,8 @@ services:
     build:
       context: .
       target: runtime
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/app/data:ro
     env_file:
@@ -59,6 +67,7 @@ services:
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - AGENT_MODE=online
     stdin_open: true
     tty: true
@@ -69,6 +78,8 @@ services:
     build:
       context: .
       target: runtime
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/app/data:ro
       - ./evaluation:/app/evaluation
@@ -77,6 +88,7 @@ services:
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
     entrypoint: ["python", "-m", "evaluation.evaluate"]
     profiles:
       - eval
@@ -86,6 +98,8 @@ services:
     build:
       context: .
       target: runtime
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - .:/app
     env_file:
@@ -93,6 +107,7 @@ services:
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
     entrypoint: /bin/bash
     stdin_open: true
     tty: true

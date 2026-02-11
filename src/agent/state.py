@@ -44,6 +44,9 @@ class AgentState(TypedDict):
     # Web search state (online mode only)
     web_search_results: list[str] | None
 
+    # Search query state
+    search_query: str | None
+
 
 def create_initial_state(mode: Literal["offline", "online"]) -> AgentState:
     """
@@ -61,4 +64,5 @@ def create_initial_state(mode: Literal["offline", "online"]) -> AgentState:
         retrieval_score=None,
         mode=mode,
         web_search_results=None,
+        search_query=None,
     )
