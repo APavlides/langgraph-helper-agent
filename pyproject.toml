@@ -45,6 +45,9 @@ eval = [
     "ragas>=0.1.0",
     "datasets>=2.18.0",
     "langchain-google-genai>=0.1.0",
+    "langsmith>=0.1.0",
+    "openevals>=0.1.0",
+    "openai>=1.0.0",
 ]
 online = [
     "langchain-tavily>=0.1.0",
